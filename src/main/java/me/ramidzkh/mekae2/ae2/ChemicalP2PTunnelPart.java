@@ -8,7 +8,6 @@ import mekanism.api.Action;
 import mekanism.api.chemical.ChemicalStack;
 import mekanism.api.chemical.IChemicalHandler;
 
-import appeng.api.config.PowerUnit;
 import appeng.api.parts.IPartItem;
 import appeng.api.parts.IPartModel;
 import appeng.items.parts.PartModels;
@@ -88,7 +87,7 @@ public class ChemicalP2PTunnelPart extends CapabilityP2PTunnelPart<ChemicalP2PTu
             }
 
             if (action.execute()) {
-                queueTunnelDrain(PowerUnit.FE, (double) total / MekanismKeyType.TYPE.getAmountPerOperation());
+                deductTransportCost(total, MekanismKeyType.TYPE);
             }
 
             return stack.copyWithAmount(amount - total);
@@ -148,8 +147,7 @@ public class ChemicalP2PTunnelPart extends CapabilityP2PTunnelPart<ChemicalP2PTu
                 var result = input.get().extractChemical(tank, amount, action);
 
                 if (action.execute()) {
-                    queueTunnelDrain(PowerUnit.FE,
-                            (double) result.getAmount() / MekanismKeyType.TYPE.getAmountPerOperation());
+                    deductTransportCost(result.getAmount(), MekanismKeyType.TYPE);
                 }
 
                 return result;

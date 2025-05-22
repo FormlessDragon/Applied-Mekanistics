@@ -3,10 +3,7 @@ package me.ramidzkh.mekae2.ae2;
 import java.util.List;
 import java.util.Objects;
 
-import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.Codec;
-import com.mojang.serialization.DataResult;
-import com.mojang.serialization.DynamicOps;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
@@ -25,7 +22,6 @@ import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 
-import mekanism.api.MekanismAPI;
 import mekanism.api.chemical.Chemical;
 import mekanism.api.chemical.ChemicalStack;
 import mekanism.api.radiation.IRadiationManager;
@@ -37,21 +33,8 @@ import appeng.core.AELog;
 public class MekanismKey extends AEKey {
 
     public static final MapCodec<MekanismKey> MAP_CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
-            Codec.withAlternative(Chemical.CODEC, new Codec<>() {
-                @Override
-                public <T> DataResult<Pair<Chemical, T>> decode(DynamicOps<T> ops, T input) {
-                    return ops.getMap(input)
-                            .flatMap(map -> ops.getStringValue(map.get("chemical_type")).flatMap(type -> {
-                                return MekanismAPI.CHEMICAL_REGISTRY.byNameCodec().decode(ops, map.get(type));
-                            }));
-                }
-
-                @Override
-                public <T> DataResult<T> encode(Chemical input, DynamicOps<T> ops, T prefix) {
-                    return DataResult.error(() -> "should not encode");
-                }
-            }).fieldOf("id").forGetter(key -> key.getStack().getChemical()))
-            .apply(instance, chemical -> MekanismKey.of(chemical.getStack(1))));
+            Chemical.HOLDER_CODEC.fieldOf("id").forGetter(key -> key.getStack().getChemicalHolder()))
+            .apply(instance, chemical -> MekanismKey.of(new ChemicalStack(chemical, 1))));
     public static final Codec<MekanismKey> CODEC = MAP_CODEC.codec();
 
     private final ChemicalStack stack;
@@ -112,7 +95,7 @@ public class MekanismKey extends AEKey {
 
     @Override
     public ResourceLocation getId() {
-        return stack.getTypeRegistryName();
+        return stack.getChemicalHolder().getKey().location();
     }
 
     @Override

@@ -12,6 +12,8 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
@@ -33,6 +35,7 @@ public class AMChemicalStackRenderer implements AEKeyRenderHandler<MekanismKey> 
     public void drawInGui(Minecraft minecraft, GuiGraphics guiGraphics, int x, int y, MekanismKey what) {
         var stack = what.getStack();
 
+        // MekanismRenderer.getSprite
         Blitter.sprite(
                 Minecraft.getInstance().getTextureAtlas(TextureAtlas.LOCATION_BLOCKS)
                         .apply(stack.getChemical().getIcon()))
@@ -105,11 +108,11 @@ public class AMChemicalStackRenderer implements AEKeyRenderHandler<MekanismKey> 
         var tooltip = new ArrayList<Component>();
         tooltip.add(getDisplayName(stack));
 
-        stack.getStack().getAttributes().forEach(attribute -> attribute.addTooltipText(tooltip));
+        stack.getStack().appendHoverText(Item.TooltipContext.EMPTY, tooltip, TooltipFlag.NORMAL);
 
         // Heuristic: If the last line doesn't include the modname, add it ourselves
         var modName = Platform.formatModName(stack.getModId());
-        if (tooltip.isEmpty() || !tooltip.get(tooltip.size() - 1).getString().equals(modName)) {
+        if (tooltip.isEmpty() || !tooltip.getLast().getString().equals(modName)) {
             tooltip.add(Component.literal(modName));
         }
 

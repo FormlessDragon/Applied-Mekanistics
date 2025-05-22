@@ -20,7 +20,7 @@ public final class ChemicalIngredientConverter implements EmiStackConverter {
     @Override
     public @Nullable EmiStack toEmiStack(GenericStack stack) {
         if (stack.what() instanceof MekanismKey key) {
-            return IMekanismAccess.INSTANCE.emiHelper().createEmiStack(key.getStack().getChemical(), stack.amount());
+            return IMekanismAccess.INSTANCE.emiHelper().createEmiStack(key.getStack());
         }
 
         return null;
