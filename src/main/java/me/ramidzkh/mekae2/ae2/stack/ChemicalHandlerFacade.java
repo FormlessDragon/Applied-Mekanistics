@@ -17,6 +17,11 @@ import appeng.core.localization.GuiText;
 public record ChemicalHandlerFacade(IChemicalHandler handler, boolean extractableOnly,
         Runnable changeListener) implements MEStorage {
 
+    /**
+     * Clamp reported values to avoid overflows when amounts get too close to Long.MAX_VALUE.
+     */
+    private static final long MAX_REPORTED_AMOUNT = 1L << 42;
+
     @Override
     public long insert(AEKey what, long amount, Actionable mode, IActionSource source) {
         if (!(what instanceof MekanismKey key)) {
@@ -69,7 +74,7 @@ public record ChemicalHandlerFacade(IChemicalHandler handler, boolean extractabl
                 continue;
             }
 
-            out.add(key, stack.getAmount());
+            out.add(key, Math.min(stack.getAmount(), MAX_REPORTED_AMOUNT));
         }
     }
 }
