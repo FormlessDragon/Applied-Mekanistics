@@ -1,13 +1,16 @@
 package me.ramidzkh.mekae2.ae2;
 
-import mekanism.api.Action;
-import mekanism.api.chemical.ChemicalStack;
-import mekanism.api.chemical.IChemicalHandler;
+import ae2.api.behaviors.GenericInternalInventory;
+import ae2.api.config.Actionable;
+import com.google.common.primitives.Ints;
+import mekanism.api.gas.Gas;
+import mekanism.api.gas.GasStack;
+import mekanism.api.gas.GasTankInfo;
+import mekanism.api.gas.IGasHandler;
+import net.minecraft.util.EnumFacing;
+import org.jetbrains.annotations.Nullable;
 
-import appeng.api.behaviors.GenericInternalInventory;
-import appeng.api.config.Actionable;
-
-public class GenericStackChemicalStorage implements IChemicalHandler {
+public class GenericStackChemicalStorage implements IGasHandler {
 
     private final GenericInternalInventory inv;
 
@@ -16,65 +19,106 @@ public class GenericStackChemicalStorage implements IChemicalHandler {
     }
 
     @Override
-    public int getChemicalTanks() {
-        return inv.size();
-    }
-
-    @Override
-    public ChemicalStack getChemicalInTank(int tank) {
-        if (inv.getKey(tank) instanceof MekanismKey what) {
-            return what.withAmount(inv.getAmount(tank));
-        }
-
-        return ChemicalStack.EMPTY;
-    }
-
-    @Override
-    public void setChemicalInTank(int tank, ChemicalStack stack) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public long getChemicalTankCapacity(int tank) {
-        return inv.getCapacity(MekanismKeyType.TYPE);
-    }
-
-    @Override
-    public boolean isValid(int tank, ChemicalStack stack) {
+    public int receiveGas(EnumFacing side, GasStack stack, boolean doTransfer) {
         var what = MekanismKey.of(stack);
-        return what == null || inv.isAllowedIn(tank, what);
-    }
-
-    @Override
-    public ChemicalStack insertChemical(int tank, ChemicalStack stack, Action action) {
-        var what = MekanismKey.of(stack);
-
         if (what == null) {
-            return stack;
+            return 0;
         }
 
-        var remainder = stack.getAmount()
-                - inv.insert(tank, what, stack.getAmount(), Actionable.of(action.toFluidAction()));
-
-        if (remainder == 0) {
-            return ChemicalStack.EMPTY;
+        int inserted = 0;
+        for (int i = 0; i < this.inv.size() && inserted < stack.amount; i++) {
+            inserted += Ints.saturatedCast(this.inv.insert(i, what, stack.amount - inserted,
+                Actionable.ofSimulate(!doTransfer)));
         }
-
-        return stack.copyWithAmount(remainder);
+        return inserted;
     }
 
     @Override
-    public ChemicalStack extractChemical(int tank, long amount, Action action) {
-        if (!(inv.getKey(tank) instanceof MekanismKey what)) {
-            return ChemicalStack.EMPTY;
+    @Nullable
+    public GasStack drawGas(EnumFacing side, int amount, boolean doTransfer) {
+        for (int i = 0; i < this.inv.size(); i++) {
+            if (this.inv.getKey(i) instanceof MekanismKey what) {
+                return extract(what, amount, doTransfer);
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public boolean canReceiveGas(EnumFacing side, Gas gas) {
+        var what = MekanismKey.of(gas);
+        if (what == null || !this.inv.canInsert()) {
+            return false;
         }
 
-        var extracted = inv.extract(tank, what, amount, Actionable.of(action.toFluidAction()));
+        for (int i = 0; i < this.inv.size(); i++) {
+            if (this.inv.isAllowedIn(i, what)) {
+                return true;
+            }
+        }
+        return false;
+    }
 
-        if (extracted == 0) {
-            return ChemicalStack.EMPTY;
+    @Override
+    public boolean canDrawGas(EnumFacing side, Gas gas) {
+        if (!this.inv.canExtract()) {
+            return false;
         }
 
-        return what.withAmount(extracted);
+        var what = MekanismKey.of(gas);
+        if (what == null) {
+            return false;
+        }
+
+        for (int i = 0; i < this.inv.size(); i++) {
+            if (what.equals(this.inv.getKey(i)) && this.inv.getAmount(i) > 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public GasTankInfo[] getTankInfo() {
+        if (!this.inv.isSupportedType(MekanismKeyType.TYPE)) {
+            return IGasHandler.NONE;
+        }
+
+        GasTankInfo[] info = new GasTankInfo[this.inv.size()];
+        for (int i = 0; i < this.inv.size(); i++) {
+            final int slot = i;
+            info[i] = new GasTankInfo() {
+                @Override
+                @Nullable
+                public GasStack getGas() {
+                    if (inv.getKey(slot) instanceof MekanismKey what) {
+                        return what.toStack(inv.getAmount(slot));
+                    }
+                    return null;
+                }
+
+                @Override
+                public int getStored() {
+                    return Ints.saturatedCast(inv.getAmount(slot));
+                }
+
+                @Override
+                public int getMaxGas() {
+                    return Ints.saturatedCast(inv.getCapacity(MekanismKeyType.TYPE));
+                }
+            };
+        }
+        return info;
+    }
+
+    @Nullable
+    private GasStack extract(MekanismKey what, int amount, boolean doTransfer) {
+        int extracted = 0;
+        for (int i = 0; i < this.inv.size() && extracted < amount; i++) {
+            extracted += Ints.saturatedCast(this.inv.extract(i, what, amount - extracted,
+                Actionable.ofSimulate(!doTransfer)));
+        }
+
+        return extracted > 0 ? what.toStack(extracted) : null;
     }
 }

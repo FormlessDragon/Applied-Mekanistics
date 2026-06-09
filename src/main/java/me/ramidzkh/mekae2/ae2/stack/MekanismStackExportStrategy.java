@@ -1,31 +1,32 @@
 package me.ramidzkh.mekae2.ae2.stack;
 
+import ae2.api.behaviors.StackExportStrategy;
+import ae2.api.behaviors.StackTransferContext;
+import ae2.api.config.Actionable;
+import ae2.api.stacks.AEKey;
+import ae2.api.storage.StorageHelper;
+import mekanism.api.gas.IGasHandler;
+import mekanism.common.capabilities.Capabilities;
+import me.ramidzkh.mekae2.ae2.MekanismKey;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.WorldServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.server.level.ServerLevel;
-import net.neoforged.neoforge.capabilities.BlockCapabilityCache;
-
-import me.ramidzkh.mekae2.MekCapabilities;
-import me.ramidzkh.mekae2.ae2.MekanismKey;
-import mekanism.api.Action;
-import mekanism.api.chemical.IChemicalHandler;
-
-import appeng.api.behaviors.StackExportStrategy;
-import appeng.api.behaviors.StackTransferContext;
-import appeng.api.config.Actionable;
-import appeng.api.stacks.AEKey;
-import appeng.api.storage.StorageHelper;
-
-public class MekanismStackExportStrategy implements StackExportStrategy {
+public final class MekanismStackExportStrategy implements StackExportStrategy {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MekanismStackExportStrategy.class);
-    private final BlockCapabilityCache<IChemicalHandler, Direction> cache;
 
-    public MekanismStackExportStrategy(ServerLevel level, BlockPos fromPos, Direction fromSide) {
-        this.cache = BlockCapabilityCache.create(MekCapabilities.CHEMICAL.block(), level, fromPos, fromSide);
+    private final WorldServer level;
+    private final BlockPos fromPos;
+    private final EnumFacing fromSide;
+
+    public MekanismStackExportStrategy(WorldServer level, BlockPos fromPos, EnumFacing fromSide) {
+        this.level = level;
+        this.fromPos = fromPos;
+        this.fromSide = fromSide;
     }
 
     @Override
@@ -34,46 +35,28 @@ public class MekanismStackExportStrategy implements StackExportStrategy {
             return 0;
         }
 
-        var storage = cache.getCapability();
-
+        IGasHandler storage = getAdjacentHandler();
         if (storage == null) {
             return 0;
         }
 
         var inv = context.getInternalStorage();
-
-        var extracted = StorageHelper.poweredExtraction(
-                context.getEnergySource(),
-                inv.getInventory(),
-                what,
-                amount,
-                context.getActionSource(),
-                Actionable.SIMULATE);
-
-        var wasInserted = extracted
-                - storage.insertChemical(mekanismKey.withAmount(extracted),
-                        Action.SIMULATE).getAmount();
+        long extracted = StorageHelper.poweredExtraction(context.getEnergySource(), inv.getInventory(), what, amount,
+                context.getActionSource(), Actionable.SIMULATE);
+        long wasInserted = storage.receiveGas(fromSide, mekanismKey.toStack(extracted), false);
 
         if (wasInserted > 0) {
-            extracted = StorageHelper.poweredExtraction(
-                    context.getEnergySource(),
-                    inv.getInventory(),
-                    what,
-                    wasInserted,
-                    context.getActionSource(),
-                    Actionable.MODULATE);
-
-            wasInserted = extracted
-                    - storage.insertChemical(mekanismKey.withAmount(extracted), Action.EXECUTE).getAmount();
+            extracted = StorageHelper.poweredExtraction(context.getEnergySource(), inv.getInventory(), what,
+                    wasInserted, context.getActionSource(), Actionable.MODULATE);
+            wasInserted = storage.receiveGas(fromSide, mekanismKey.toStack(extracted), true);
 
             if (wasInserted < extracted) {
-                // Be nice and try to give the overflow back
-                var leftover = extracted - wasInserted;
+                long leftover = extracted - wasInserted;
                 leftover -= inv.getInventory().insert(what, leftover, Actionable.MODULATE, context.getActionSource());
 
                 if (leftover > 0) {
-                    LOGGER.error("Storage export: adjacent block unexpectedly refused insert, voided {}x{}", leftover,
-                            what);
+                    LOGGER.error("Storage export: adjacent gas handler unexpectedly refused insert, voided {}x{}",
+                            leftover, what);
                 }
             }
         }
@@ -87,14 +70,16 @@ public class MekanismStackExportStrategy implements StackExportStrategy {
             return 0;
         }
 
-        var storage = cache.getCapability();
-
+        IGasHandler storage = getAdjacentHandler();
         if (storage == null) {
             return 0;
         }
 
-        return amount
-                - storage.insertChemical(mekanismKey.withAmount(amount), Action.fromFluidAction(mode.getFluidAction()))
-                        .getAmount();
+        return storage.receiveGas(fromSide, mekanismKey.toStack(amount), mode == Actionable.MODULATE);
+    }
+
+    private IGasHandler getAdjacentHandler() {
+        TileEntity tile = level.getTileEntity(fromPos);
+        return tile == null ? null : tile.getCapability(Capabilities.GAS_HANDLER_CAPABILITY, fromSide);
     }
 }

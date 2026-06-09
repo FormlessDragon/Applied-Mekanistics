@@ -1,0 +1,17 @@
+text.appmek.chemical=Химикат
+text.appmek.gas=Химикат
+text.appmek.creative_tab=Applied Mekanistics
+itemGroup.appmek=Applied Mekanistics
+text.appmek.qio_frequency=Переодичность QIO (%s)
+item.appmek.chemical_cell_housing.name=Корпус химической ячейки ME
+item.appmek.chemical_storage_cell_1k.name=Химическая ячейка памяти ME 1К
+item.appmek.chemical_storage_cell_4k.name=Химическая ячейка памяти ME 4К
+item.appmek.chemical_storage_cell_16k.name=Химическая ячейка памяти ME 16К
+item.appmek.chemical_storage_cell_64k.name=Химическая ячейка памяти ME 64К
+item.appmek.chemical_storage_cell_256k.name=Химическая ячейка памяти ME 256К
+item.appmek.portable_chemical_cell_16k.name=Переносная химическая ячейка 16К
+item.appmek.portable_chemical_cell_1k.name=Переносная химическая ячейка 1К
+item.appmek.portable_chemical_cell_4k.name=Переносная химическая ячейка 4К
+item.appmek.portable_chemical_cell_64k.name=Переносная химическая ячейка 64К
+item.appmek.portable_chemical_cell_256k.name=Переносная химическая ячейка 256К
+item.appmek.chemical_p2p_tunnel.name=Химический P2P тоннель

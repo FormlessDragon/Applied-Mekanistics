@@ -4,3 +4,6 @@
 build/
 libs/
 run/
+docs/
+src/test
+AGENTS.md

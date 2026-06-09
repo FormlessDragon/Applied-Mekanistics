@@ -1,27 +1,29 @@
 package me.ramidzkh.mekae2.ae2.stack;
 
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.server.level.ServerLevel;
-import net.neoforged.neoforge.capabilities.BlockCapabilityCache;
-
-import me.ramidzkh.mekae2.MekCapabilities;
+import ae2.api.behaviors.StackImportStrategy;
+import ae2.api.behaviors.StackTransferContext;
+import ae2.api.config.Actionable;
+import ae2.core.AELog;
+import mekanism.api.gas.GasStack;
+import mekanism.api.gas.IGasHandler;
+import mekanism.common.capabilities.Capabilities;
 import me.ramidzkh.mekae2.ae2.MekanismKey;
 import me.ramidzkh.mekae2.ae2.MekanismKeyType;
-import mekanism.api.Action;
-import mekanism.api.chemical.IChemicalHandler;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.WorldServer;
 
-import appeng.api.behaviors.StackImportStrategy;
-import appeng.api.behaviors.StackTransferContext;
-import appeng.api.config.Actionable;
-import appeng.core.AELog;
+public final class MekanismStackImportStrategy implements StackImportStrategy {
 
-public class MekanismStackImportStrategy implements StackImportStrategy {
+    private final WorldServer level;
+    private final BlockPos fromPos;
+    private final EnumFacing fromSide;
 
-    private final BlockCapabilityCache<IChemicalHandler, Direction> cache;
-
-    public MekanismStackImportStrategy(ServerLevel level, BlockPos fromPos, Direction fromSide) {
-        this.cache = BlockCapabilityCache.create(MekCapabilities.CHEMICAL.block(), level, fromPos, fromSide);
+    public MekanismStackImportStrategy(WorldServer level, BlockPos fromPos, EnumFacing fromSide) {
+        this.level = level;
+        this.fromPos = fromPos;
+        this.fromSide = fromSide;
     }
 
     @Override
@@ -30,60 +32,64 @@ public class MekanismStackImportStrategy implements StackImportStrategy {
             return false;
         }
 
-        var handler = cache.getCapability();
-
+        IGasHandler handler = getAdjacentHandler();
         if (handler == null) {
             return false;
         }
 
-        var remainingTransferAmount = context.getOperationsRemaining()
+        long remainingTransferAmount = context.getOperationsRemaining()
                 * (long) MekanismKeyType.TYPE.getAmountPerOperation();
-
         var inv = context.getInternalStorage();
 
-        // Try to find an extractable resource that fits our filter
-        for (var i = 0; i < handler.getChemicalTanks() && remainingTransferAmount > 0; i++) {
-            var stack = handler.getChemicalInTank(i);
-            var resource = MekanismKey.of(stack);
-
-            if (resource == null
-                    // Regard a filter that is set on the bus
-                    || context.isInFilter(resource) == context.isInverted()) {
+        for (var tank : handler.getTankInfo()) {
+            if (tank == null || remainingTransferAmount <= 0) {
                 continue;
             }
 
-            // Check how much of *this* resource we can actually insert into the network, it might be 0
-            // if the cells are partitioned or there's not enough types left, etc.
-            var amountForThisResource = inv.getInventory().insert(resource, remainingTransferAmount,
-                    Actionable.SIMULATE,
+            GasStack stack = tank.getGas();
+            MekanismKey resource = MekanismKey.of(stack);
+            if (resource == null || context.isInFilter(resource) == context.isInverted()
+                    || !handler.canDrawGas(fromSide, resource.getGas())) {
+                continue;
+            }
+
+            long amountForThisResource = inv.getInventory().insert(resource, remainingTransferAmount,
+                    Actionable.SIMULATE, context.getActionSource());
+            GasStack extractedStack = handler.drawGas(fromSide, clampToInt(amountForThisResource), true);
+            if (extractedStack == null || extractedStack.amount <= 0) {
+                continue;
+            }
+
+            long inserted = inv.getInventory().insert(resource, extractedStack.amount, Actionable.MODULATE,
                     context.getActionSource());
 
-            // Try to simulate-extract it
-            var amount = handler.extractChemical(resource.withAmount(amountForThisResource), Action.EXECUTE)
-                    .getAmount();
+            if (inserted < extractedStack.amount) {
+                long leftover = extractedStack.amount - inserted;
+                leftover -= handler.receiveGas(fromSide, resource.toStack(leftover), true);
 
-            if (amount > 0) {
-                var inserted = inv.getInventory().insert(resource, amount, Actionable.MODULATE,
-                        context.getActionSource());
-
-                if (inserted < amount) {
-                    // Be nice and try to give the overflow back
-                    var leftover = amount - inserted;
-                    leftover = handler
-                            .insertChemical(resource.withAmount(leftover), Action.EXECUTE).getAmount();
-
-                    if (leftover > 0) {
-                        AELog.warn("Extracted %dx%s from adjacent storage and voided it because network refused insert",
-                                leftover, resource);
-                    }
+                if (leftover > 0) {
+                    AELog.warn("Extracted %dx%s from adjacent gas storage and voided it because network refused insert",
+                            leftover, resource);
                 }
-
-                var opsUsed = Math.max(1, inserted / MekanismKeyType.TYPE.getAmountPerOperation());
-                context.reduceOperationsRemaining(opsUsed);
-                remainingTransferAmount -= inserted;
             }
+
+            long opsUsed = Math.max(1, inserted / MekanismKeyType.TYPE.getAmountPerOperation());
+            context.reduceOperationsRemaining(opsUsed);
+            remainingTransferAmount -= inserted;
         }
 
         return false;
+    }
+
+    private IGasHandler getAdjacentHandler() {
+        TileEntity tile = level.getTileEntity(fromPos);
+        return tile == null ? null : tile.getCapability(Capabilities.GAS_HANDLER_CAPABILITY, fromSide);
+    }
+
+    private static int clampToInt(long amount) {
+        if (amount <= 0) {
+            return 0;
+        }
+        return amount > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) amount;
     }
 }

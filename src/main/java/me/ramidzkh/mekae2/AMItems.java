@@ -1,110 +1,97 @@
 package me.ramidzkh.mekae2;
 
-import net.minecraft.Util;
-import net.minecraft.core.registries.Registries;
-import net.minecraft.world.item.CreativeModeTab;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
-import net.neoforged.bus.api.IEventBus;
-import net.neoforged.neoforge.registries.DeferredHolder;
-import net.neoforged.neoforge.registries.DeferredItem;
-import net.neoforged.neoforge.registries.DeferredRegister;
+import java.util.Objects;
+import java.util.function.Function;
 
+import ae2.api.parts.PartModels;
+import ae2.api.parts.IPart;
+import ae2.api.parts.IPartItem;
+import ae2.core.definitions.ItemDefinition;
+import ae2.items.parts.PartItem;
+import ae2.items.parts.PartModelsHelper;
+import ae2.items.materials.MaterialItem;
+import ae2.items.storage.StorageTier;
 import me.ramidzkh.mekae2.ae2.ChemicalP2PTunnelPart;
 import me.ramidzkh.mekae2.item.ChemicalPortableCellItem;
 import me.ramidzkh.mekae2.item.ChemicalStorageCell;
+import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.event.RegistryEvent;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
-import appeng.api.parts.PartModels;
-import appeng.block.AEBaseBlock;
-import appeng.block.AEBaseBlockItem;
-import appeng.items.AEBaseItem;
-import appeng.items.materials.MaterialItem;
-import appeng.items.parts.PartItem;
-import appeng.items.parts.PartModelsHelper;
-import appeng.items.storage.StorageTier;
+@Mod.EventBusSubscriber(modid = Reference.MOD_ID)
+public final class AMItems {
 
-public class AMItems {
+    public static final CreativeTabs CREATIVE_TAB = new CreativeTabs(Reference.MOD_ID) {
+        @Override
+        public ItemStack createIcon() {
+            return CHEMICAL_CELL_64K.stack();
+        }
+    };
 
-    private static final DeferredRegister<CreativeModeTab> TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB,
-            AppliedMekanistics.ID);
-    private static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(AppliedMekanistics.ID);
+    public static final ItemDefinition<MaterialItem> CHEMICAL_CELL_HOUSING = new ItemDefinition<>(
+        AppliedMekanistics.id("chemical_cell_housing"), new MaterialItem(), CREATIVE_TAB);
 
-    public static void initialize(IEventBus bus) {
-        TABS.register(bus);
-        ITEMS.register(bus);
+    public static final ItemDefinition<ChemicalStorageCell> CHEMICAL_CELL_1K = new ItemDefinition<>(
+        AppliedMekanistics.id("chemical_storage_cell_1k"), new ChemicalStorageCell(StorageTier.SIZE_1K), CREATIVE_TAB);
+    public static final ItemDefinition<ChemicalStorageCell> CHEMICAL_CELL_4K = new ItemDefinition<>(
+        AppliedMekanistics.id("chemical_storage_cell_4k"), new ChemicalStorageCell(StorageTier.SIZE_4K), CREATIVE_TAB);
+    public static final ItemDefinition<ChemicalStorageCell> CHEMICAL_CELL_16K = new ItemDefinition<>(
+        AppliedMekanistics.id("chemical_storage_cell_16k"), new ChemicalStorageCell(StorageTier.SIZE_16K), CREATIVE_TAB);
+    public static final ItemDefinition<ChemicalStorageCell> CHEMICAL_CELL_64K = new ItemDefinition<>(
+        AppliedMekanistics.id("chemical_storage_cell_64k"), new ChemicalStorageCell(StorageTier.SIZE_64K), CREATIVE_TAB);
+    public static final ItemDefinition<ChemicalStorageCell> CHEMICAL_CELL_256K = new ItemDefinition<>(
+        AppliedMekanistics.id("chemical_storage_cell_256k"), new ChemicalStorageCell(StorageTier.SIZE_256K),
+        CREATIVE_TAB);
+
+    public static final ItemDefinition<PartItem<ChemicalP2PTunnelPart>> CHEMICAL_P2P_TUNNEL = createPart(
+        AppliedMekanistics.id("chemical_p2p_tunnel"), ChemicalP2PTunnelPart.class, ChemicalP2PTunnelPart::new);
+
+    public static final ItemDefinition<ChemicalPortableCellItem> PORTABLE_CHEMICAL_CELL_1K = new ItemDefinition<>(
+        AppliedMekanistics.id("portable_chemical_cell_1k"),
+        new ChemicalPortableCellItem(18, StorageTier.SIZE_1K, 20000, 0x80caff), CREATIVE_TAB);
+    public static final ItemDefinition<ChemicalPortableCellItem> PORTABLE_CHEMICAL_CELL_4K = new ItemDefinition<>(
+        AppliedMekanistics.id("portable_chemical_cell_4k"),
+        new ChemicalPortableCellItem(18, StorageTier.SIZE_4K, 20000, 0x80caff), CREATIVE_TAB);
+    public static final ItemDefinition<ChemicalPortableCellItem> PORTABLE_CHEMICAL_CELL_16K = new ItemDefinition<>(
+        AppliedMekanistics.id("portable_chemical_cell_16k"),
+        new ChemicalPortableCellItem(18, StorageTier.SIZE_16K, 20000, 0x80caff), CREATIVE_TAB);
+    public static final ItemDefinition<ChemicalPortableCellItem> PORTABLE_CHEMICAL_CELL_64K = new ItemDefinition<>(
+        AppliedMekanistics.id("portable_chemical_cell_64k"),
+        new ChemicalPortableCellItem(18, StorageTier.SIZE_64K, 20000, 0x80caff), CREATIVE_TAB);
+    public static final ItemDefinition<ChemicalPortableCellItem> PORTABLE_CHEMICAL_CELL_256K = new ItemDefinition<>(
+        AppliedMekanistics.id("portable_chemical_cell_256k"),
+        new ChemicalPortableCellItem(18, StorageTier.SIZE_256K, 20000, 0x80caff), CREATIVE_TAB);
+
+    private static final ItemDefinition<?>[] ITEMS = {
+        CHEMICAL_CELL_HOUSING,
+        CHEMICAL_CELL_1K,
+        CHEMICAL_CELL_4K,
+        CHEMICAL_CELL_16K,
+        CHEMICAL_CELL_64K,
+        CHEMICAL_CELL_256K,
+        PORTABLE_CHEMICAL_CELL_1K,
+        PORTABLE_CHEMICAL_CELL_4K,
+        PORTABLE_CHEMICAL_CELL_16K,
+        PORTABLE_CHEMICAL_CELL_64K,
+        PORTABLE_CHEMICAL_CELL_256K,
+        CHEMICAL_P2P_TUNNEL
+    };
+
+    private AMItems() {
     }
 
-    private static Item basic() {
-        return new MaterialItem(properties());
+    @SubscribeEvent
+    public static void registerItems(RegistryEvent.Register<Item> event) {
+        for (ItemDefinition<?> definition : ITEMS) {
+            event.getRegistry().register(Objects.requireNonNull(definition.item()));
+        }
     }
 
-    private static Item.Properties properties() {
-        return new Item.Properties();
-    }
-
-    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> CREATIVE_TAB = TABS.register("main",
-            () -> CreativeModeTab.builder()
-                    .title(AMText.CREATIVE_TAB.formatted())
-                    .icon(() -> new ItemStack(AMItems.CHEMICAL_CELL_64K.get()))
-                    .displayItems((params, output) -> {
-                        for (var entry : ITEMS.getEntries()) {
-                            var item = entry.get();
-
-                            // For block items, the block controls the creative tab
-                            if (item instanceof AEBaseBlockItem baseItem
-                                    && baseItem.getBlock() instanceof AEBaseBlock baseBlock) {
-                                baseBlock.addToMainCreativeTab(params, output);
-                            } else if (item instanceof AEBaseItem baseItem) {
-                                baseItem.addToMainCreativeTab(params, output);
-                            } else {
-                                output.accept(item);
-                            }
-                        }
-                    })
-                    .build());
-
-    public static final DeferredItem<Item> CHEMICAL_CELL_HOUSING = ITEMS.register("chemical_cell_housing",
-            AMItems::basic);
-
-    public static final DeferredItem<Item> CHEMICAL_CELL_1K = ITEMS.register("chemical_storage_cell_1k",
-            () -> new ChemicalStorageCell(properties().stacksTo(1), StorageTier.SIZE_1K));
-    public static final DeferredItem<Item> CHEMICAL_CELL_4K = ITEMS.register("chemical_storage_cell_4k",
-            () -> new ChemicalStorageCell(properties().stacksTo(1), StorageTier.SIZE_4K));
-    public static final DeferredItem<Item> CHEMICAL_CELL_16K = ITEMS.register("chemical_storage_cell_16k",
-            () -> new ChemicalStorageCell(properties().stacksTo(1), StorageTier.SIZE_16K));
-    public static final DeferredItem<Item> CHEMICAL_CELL_64K = ITEMS.register("chemical_storage_cell_64k",
-            () -> new ChemicalStorageCell(properties().stacksTo(1), StorageTier.SIZE_64K));
-    public static final DeferredItem<Item> CHEMICAL_CELL_256K = ITEMS.register("chemical_storage_cell_256k",
-            () -> new ChemicalStorageCell(properties().stacksTo(1), StorageTier.SIZE_256K));
-
-    public static final DeferredItem<Item> PORTABLE_CHEMICAL_CELL_1K = ITEMS.register(
-            "portable_chemical_cell_1k",
-            () -> new ChemicalPortableCellItem(18, AMMenus.PORTABLE_CHEMICAL_CELL_TYPE, StorageTier.SIZE_1K,
-                    properties().stacksTo(1), 0x80caff));
-    public static final DeferredItem<Item> PORTABLE_CHEMICAL_CELL_4K = ITEMS.register(
-            "portable_chemical_cell_4k",
-            () -> new ChemicalPortableCellItem(18, AMMenus.PORTABLE_CHEMICAL_CELL_TYPE, StorageTier.SIZE_4K,
-                    properties().stacksTo(1), 0x80caff));
-    public static final DeferredItem<Item> PORTABLE_CHEMICAL_CELL_16K = ITEMS.register(
-            "portable_chemical_cell_16k",
-            () -> new ChemicalPortableCellItem(18, AMMenus.PORTABLE_CHEMICAL_CELL_TYPE, StorageTier.SIZE_16K,
-                    properties().stacksTo(1), 0x80caff));
-    public static final DeferredItem<Item> PORTABLE_CHEMICAL_CELL_64K = ITEMS.register(
-            "portable_chemical_cell_64k",
-            () -> new ChemicalPortableCellItem(18, AMMenus.PORTABLE_CHEMICAL_CELL_TYPE, StorageTier.SIZE_64K,
-                    properties().stacksTo(1), 0x80caff));
-    public static final DeferredItem<Item> PORTABLE_CHEMICAL_CELL_256K = ITEMS.register(
-            "portable_chemical_cell_256k",
-            () -> new ChemicalPortableCellItem(18, AMMenus.PORTABLE_CHEMICAL_CELL_TYPE, StorageTier.SIZE_256K,
-                    properties().stacksTo(1), 0x80caff));
-
-    public static final DeferredItem<PartItem<ChemicalP2PTunnelPart>> CHEMICAL_P2P_TUNNEL = Util.make(() -> {
-        PartModels.registerModels(PartModelsHelper.createModels(ChemicalP2PTunnelPart.class));
-        return ITEMS.register("chemical_p2p_tunnel",
-                () -> new PartItem<>(properties(), ChemicalP2PTunnelPart.class, ChemicalP2PTunnelPart::new));
-    });
-
-    public static DeferredItem<Item> get(Tier tier) {
+    public static ItemDefinition<ChemicalStorageCell> get(Tier tier) {
         return switch (tier) {
             case _1K -> CHEMICAL_CELL_1K;
             case _4K -> CHEMICAL_CELL_4K;
@@ -114,7 +101,15 @@ public class AMItems {
         };
     }
 
-    public static DeferredItem<Item> getPortableCell(Tier tier) {
+    public enum Tier {
+        _1K,
+        _4K,
+        _16K,
+        _64K,
+        _256K
+    }
+
+    public static ItemDefinition<ChemicalPortableCellItem> getPortableCell(Tier tier) {
         return switch (tier) {
             case _1K -> PORTABLE_CHEMICAL_CELL_1K;
             case _4K -> PORTABLE_CHEMICAL_CELL_4K;
@@ -124,11 +119,11 @@ public class AMItems {
         };
     }
 
-    public enum Tier {
-        _1K,
-        _4K,
-        _16K,
-        _64K,
-        _256K
+    private static <T extends IPart> ItemDefinition<PartItem<T>> createPart(
+        ResourceLocation id, Class<T> partClass, Function<IPartItem<T>, T> factory) {
+        PartModels.registerModels(PartModelsHelper.createModels(partClass));
+        PartItem<T> item = new PartItem<>(partClass, factory);
+        item.setCreativeTab(CREATIVE_TAB);
+        return new ItemDefinition<>(id, item, CREATIVE_TAB);
     }
 }

@@ -1,6 +1,6 @@
 {
-  "pack": {
-    "description": "Resources for Applied Mekanistics",
-    "pack_format": 9
-  }
+	"pack": {
+		"description": "${mod_name} Resources",
+		"pack_format": 3
+	}
 }

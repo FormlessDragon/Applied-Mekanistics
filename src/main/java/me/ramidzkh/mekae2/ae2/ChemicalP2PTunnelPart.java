@@ -2,22 +2,24 @@ package me.ramidzkh.mekae2.ae2;
 
 import java.util.List;
 
+import ae2.api.parts.IPartItem;
+import ae2.api.parts.IPartModel;
+import ae2.items.parts.PartModels;
+import ae2.parts.p2p.CapabilityP2PTunnelPart;
+import ae2.parts.p2p.P2PModels;
+import mekanism.api.gas.Gas;
+import mekanism.api.gas.GasStack;
+import mekanism.api.gas.GasTankInfo;
+import mekanism.api.gas.IGasHandler;
+import mekanism.common.capabilities.Capabilities;
 import me.ramidzkh.mekae2.AppliedMekanistics;
-import me.ramidzkh.mekae2.MekCapabilities;
-import mekanism.api.Action;
-import mekanism.api.chemical.ChemicalStack;
-import mekanism.api.chemical.IChemicalHandler;
+import net.minecraft.util.EnumFacing;
+import org.jetbrains.annotations.Nullable;
 
-import appeng.api.parts.IPartItem;
-import appeng.api.parts.IPartModel;
-import appeng.items.parts.PartModels;
-import appeng.parts.p2p.CapabilityP2PTunnelPart;
-import appeng.parts.p2p.P2PModels;
-
-public class ChemicalP2PTunnelPart extends CapabilityP2PTunnelPart<ChemicalP2PTunnelPart, IChemicalHandler> {
+public class ChemicalP2PTunnelPart extends CapabilityP2PTunnelPart<ChemicalP2PTunnelPart, IGasHandler> {
 
     private static final P2PModels MODELS = new P2PModels(AppliedMekanistics.id("part/chemical_p2p_tunnel"));
-    private static final IChemicalHandler NULL_CHEMICAL_HANDLER = new NullChemicalHandler();
+    private static final IGasHandler NULL_GAS_HANDLER = new NullGasHandler();
 
     @PartModels
     public static List<IPartModel> getModels() {
@@ -25,10 +27,10 @@ public class ChemicalP2PTunnelPart extends CapabilityP2PTunnelPart<ChemicalP2PTu
     }
 
     public ChemicalP2PTunnelPart(IPartItem<?> partItem) {
-        super(partItem, MekCapabilities.CHEMICAL.block());
-        inputHandler = new InputChemicalHandler();
-        outputHandler = new OutputChemicalHandler();
-        emptyHandler = NULL_CHEMICAL_HANDLER;
+        super(partItem, Capabilities.GAS_HANDLER_CAPABILITY);
+        this.inputHandler = new InputGasHandler();
+        this.outputHandler = new OutputGasHandler();
+        this.emptyHandler = NULL_GAS_HANDLER;
     }
 
     @Override
@@ -36,159 +38,167 @@ public class ChemicalP2PTunnelPart extends CapabilityP2PTunnelPart<ChemicalP2PTu
         return MODELS.getModel(this.isPowered(), this.isActive());
     }
 
-    private class InputChemicalHandler implements IChemicalHandler {
-
+    private class InputGasHandler implements IGasHandler {
         @Override
-        public int getChemicalTanks() {
-            return 1;
+        public int receiveGas(EnumFacing side, GasStack stack, boolean doTransfer) {
+            var outputs = getOutputs();
+            int outputTunnels = outputs.size();
+            int amount = stack == null ? 0 : stack.amount;
+
+            if (outputTunnels == 0 || amount <= 0) {
+                return 0;
+            }
+
+            int amountPerOutput = amount / outputTunnels;
+            int overflow = amount % outputTunnels;
+            int total = 0;
+
+            for (var target : outputs) {
+                try (var capabilityGuard = target.getAdjacentCapability()) {
+                    var output = capabilityGuard.get();
+                    int toSend = amountPerOutput + overflow;
+                    if (toSend <= 0) {
+                        break;
+                    }
+
+                    int sent = ChemicalP2PTunnelPart.receiveGas(stack, adjacentSide(target), doTransfer, output,
+                        toSend);
+                    overflow = toSend - sent;
+                    total += sent;
+                }
+            }
+
+            if (doTransfer) {
+                deductTransportCost(total, MekanismKeyType.TYPE);
+            }
+
+            return total;
         }
 
         @Override
-        public ChemicalStack getChemicalInTank(int tank) {
-            return ChemicalStack.EMPTY;
+        @Nullable
+        public GasStack drawGas(EnumFacing side, int amount, boolean doTransfer) {
+            return null;
         }
 
         @Override
-        public void setChemicalInTank(int tank, ChemicalStack stack) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public long getChemicalTankCapacity(int tank) {
-            return Integer.MAX_VALUE;
-        }
-
-        @Override
-        public boolean isValid(int tank, ChemicalStack stack) {
+        public boolean canReceiveGas(EnumFacing side, Gas gas) {
             return true;
         }
 
         @Override
-        public ChemicalStack insertChemical(int tank, ChemicalStack stack, Action action) {
-            var outputTunnels = getOutputs().size();
-            var amount = stack.getAmount();
-
-            if (outputTunnels == 0 || stack.isEmpty()) {
-                return stack;
-            }
-
-            var amountPerOutput = amount / outputTunnels;
-            var overflow = amountPerOutput == 0L ? amount : amount % amountPerOutput;
-            var total = 0L;
-
-            for (var target : getOutputs()) {
-                try (var capabilityGuard = target.getAdjacentCapability()) {
-                    var output = capabilityGuard.get();
-                    var toSend = amountPerOutput + overflow;
-
-                    overflow = output.insertChemical(stack.copyWithAmount(toSend), action).getAmount();
-                    total += toSend - overflow;
-                }
-            }
-
-            if (action.execute()) {
-                deductTransportCost(total, MekanismKeyType.TYPE);
-            }
-
-            return stack.copyWithAmount(amount - total);
+        public boolean canDrawGas(EnumFacing side, Gas gas) {
+            return false;
         }
 
         @Override
-        public ChemicalStack extractChemical(int tank, long amount, Action action) {
-            return ChemicalStack.EMPTY;
+        public GasTankInfo[] getTankInfo() {
+            return IGasHandler.NONE;
         }
     }
 
-    private class OutputChemicalHandler implements IChemicalHandler {
+    static int distributeGas(GasStack stack, boolean doTransfer, List<? extends IGasHandler> outputs) {
+        int outputTunnels = outputs.size();
+        int amount = stack == null ? 0 : stack.amount;
 
-        @Override
-        public int getChemicalTanks() {
-            try (var input = getInputCapability()) {
-                return input.get().getChemicalTanks();
+        if (outputTunnels == 0 || amount <= 0) {
+            return 0;
+        }
+
+        int amountPerOutput = amount / outputTunnels;
+        int overflow = amount % outputTunnels;
+        int total = 0;
+
+        for (IGasHandler output : outputs) {
+            int toSend = amountPerOutput + overflow;
+            if (toSend <= 0) {
+                break;
             }
+
+            int sent = receiveGas(stack, null, doTransfer, output, toSend);
+            overflow = toSend - sent;
+            total += sent;
+        }
+
+        return total;
+    }
+
+    private static int receiveGas(GasStack stack, EnumFacing side, boolean doTransfer, IGasHandler output, int amount) {
+        GasStack split = stack.copy();
+        split.amount = amount;
+        return output.receiveGas(side, split, doTransfer);
+    }
+
+    private static EnumFacing adjacentSide(ChemicalP2PTunnelPart output) {
+        EnumFacing side = output.getSide();
+        return side == null ? null : side.getOpposite();
+    }
+
+    private class OutputGasHandler implements IGasHandler {
+        @Override
+        public int receiveGas(EnumFacing side, GasStack stack, boolean doTransfer) {
+            return 0;
         }
 
         @Override
-        public ChemicalStack getChemicalInTank(int tank) {
+        @Nullable
+        public GasStack drawGas(EnumFacing side, int amount, boolean doTransfer) {
             try (var input = getInputCapability()) {
-                return input.get().getChemicalInTank(tank);
-            }
-        }
+                var result = input.get().drawGas(side, amount, doTransfer);
 
-        @Override
-        public void setChemicalInTank(int tank, ChemicalStack stack) {
-            try (var input = getInputCapability()) {
-                input.get().setChemicalInTank(tank, stack);
-            }
-        }
-
-        @Override
-        public long getChemicalTankCapacity(int tank) {
-            try (var input = getInputCapability()) {
-                return input.get().getChemicalTankCapacity(tank);
-            }
-        }
-
-        @Override
-        public boolean isValid(int tank, ChemicalStack stack) {
-            try (var input = getInputCapability()) {
-                return input.get().isValid(tank, stack);
-            }
-        }
-
-        @Override
-        public ChemicalStack insertChemical(int tank, ChemicalStack stack, Action action) {
-            return stack;
-        }
-
-        @Override
-        public ChemicalStack extractChemical(int tank, long amount, Action action) {
-            try (var input = getInputCapability()) {
-                var result = input.get().extractChemical(tank, amount, action);
-
-                if (action.execute()) {
-                    deductTransportCost(result.getAmount(), MekanismKeyType.TYPE);
+                if (doTransfer && result != null) {
+                    deductTransportCost(result.amount, MekanismKeyType.TYPE);
                 }
 
                 return result;
             }
         }
-    }
-
-    private static class NullChemicalHandler implements IChemicalHandler {
-        @Override
-        public int getChemicalTanks() {
-            return 0;
-        }
 
         @Override
-        public ChemicalStack getChemicalInTank(int tank) {
-            return ChemicalStack.EMPTY;
-        }
-
-        @Override
-        public void setChemicalInTank(int tank, ChemicalStack stack) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public long getChemicalTankCapacity(int tank) {
-            return 0;
-        }
-
-        @Override
-        public boolean isValid(int tank, ChemicalStack stack) {
+        public boolean canReceiveGas(EnumFacing side, Gas gas) {
             return false;
         }
 
         @Override
-        public ChemicalStack insertChemical(int tank, ChemicalStack stack, Action action) {
-            return stack;
+        public boolean canDrawGas(EnumFacing side, Gas gas) {
+            try (var input = getInputCapability()) {
+                return input.get().canDrawGas(side, gas);
+            }
         }
 
         @Override
-        public ChemicalStack extractChemical(int tank, long amount, Action action) {
-            return ChemicalStack.EMPTY;
+        public GasTankInfo[] getTankInfo() {
+            try (var input = getInputCapability()) {
+                return input.get().getTankInfo();
+            }
+        }
+    }
+
+    private static class NullGasHandler implements IGasHandler {
+        @Override
+        public int receiveGas(EnumFacing side, GasStack stack, boolean doTransfer) {
+            return 0;
+        }
+
+        @Override
+        @Nullable
+        public GasStack drawGas(EnumFacing side, int amount, boolean doTransfer) {
+            return null;
+        }
+
+        @Override
+        public boolean canReceiveGas(EnumFacing side, Gas gas) {
+            return false;
+        }
+
+        @Override
+        public boolean canDrawGas(EnumFacing side, Gas gas) {
+            return false;
+        }
+
+        @Override
+        public GasTankInfo[] getTankInfo() {
+            return IGasHandler.NONE;
         }
     }
 }

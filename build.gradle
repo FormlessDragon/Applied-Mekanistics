@@ -1,225 +1,274 @@
 plugins {
-    id("net.neoforged.moddev") version "2.0.78"
-    id("com.matthewprenger.cursegradle") version "1.4.0"
-    id("com.diffplug.spotless") version "7.0.3"
-    id("com.modrinth.minotaur") version "2.8.7"
+    id 'java'
+    id 'java-library'
+    id 'maven-publish'
+    id 'com.gradleup.shadow' version '9.4.1'
+    id 'org.jetbrains.gradle.plugin.idea-ext' version '1.4.1'
+    id 'xyz.wagyourtail.unimined' version '1.4.18-kappa'
 }
 
-group = "me.ramidzkh"
-version = System.getenv("APPMEK_VERSION") ?: "1.6.0"
+import org.jetbrains.gradle.ext.Gradle
 
-repositories {
-    maven {
-        name = "Modmaven"
-        url = uri("https://modmaven.dev/")
+apply from: 'gradle/scripts/helpers.gradle'
 
-        content {
-            includeGroup("appeng")
-            includeGroup("mekanism")
-        }
-    }
+assertProperty 'mod_version'
+assertProperty 'root_package'
+assertProperty 'mod_id'
+assertProperty 'mod_name'
 
-    maven {
-        name = "CurseForge"
-        url = uri("https://www.cursemaven.com")
+assertSubProperties 'use_access_transformer', 'access_transformer_locations'
+assertSubProperties 'is_coremod', 'coremod_includes_mod', 'coremod_plugin_class_name'
+assertSubProperties 'use_asset_mover', 'asset_mover_version'
 
-        content {
-            includeGroup("curse.maven")
-        }
-    }
+setDefaultProperty 'generate_sources_jar', true, false
+setDefaultProperty 'generate_javadocs_jar', true, false
+setDefaultProperty 'minecraft_username', true, 'Developer'
+setDefaultProperty 'extra_jvm_args', false, ''
 
-    maven {
-        name = "TerraformersMC"
-        url = uri("https://maven.terraformersmc.com/")
+version = propertyString('mod_version')
+group = propertyString('root_package')
 
-        content {
-            includeGroup("dev.emi")
-        }
-    }
-
-    maven {
-        name = "Jared maven"
-        url = uri("https://maven.blamejared.com")
-
-        content {
-            includeGroup("mezz.jei")
-        }
-    }
-
-    maven {
-        name = "Local"
-        url = file("libs").toURI()
-    }
-
-    mavenLocal()
-}
-
-dependencies {
-    // We depend on many AE2 internals, such as using their basic cell drive, thus not using classifier = "api"
-    implementation("org.appliedenergistics:appliedenergistics2:${ae2_version}")
-
-    compileOnly("mekanism:Mekanism:${minecraft_version}-${mekanism_version}:api")
-    runtimeOnly("mekanism:Mekanism:${minecraft_version}-${mekanism_version}:all")
-
-    if (project.runtime_itemlist_mod == "emi") {
-        implementation("dev.emi:emi-neoforge:${project.emi_version}")
-        compileOnly("mezz.jei:jei-${project.minecraft_version}-neoforge:${project.jei_version}")
-        compileOnly("curse.maven:ae2-jei-integration-1074338:${jei_ae2_integration_id}")
-    } else if (project.runtime_itemlist_mod == "jei") {
-        compileOnly("dev.emi:emi-neoforge:${project.emi_version}")
-        implementation("mezz.jei:jei-${project.minecraft_version}-neoforge:${project.jei_version}")
-        implementation("curse.maven:ae2-jei-integration-1074338:${jei_ae2_integration_id}")
-    } else {
-        throw new GradleException("Invalid runtime_itemlist_mod value: " + project.runtime_itemlist_mod)
-    }
-
-    compileOnly("curse.maven:jade-324717:${jade_id}")
-}
-
-sourceSets {
-    main {
-        resources {
-            srcDir("src/generated/resources")
-        }
-    }
+base {
+    archivesName = propertyString('mod_id')
 }
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+    if (propertyBool('generate_sources_jar')) {
+        withSourcesJar()
+    }
+    if (propertyBool('generate_javadocs_jar')) {
+        withJavadocJar()
     }
 }
 
-////////////////////
-// Minecraft
-neoForge {
-    version = neoforge_version
+configurations {
+    contain
+    implementation.extendsFrom(contain)
+    modCompileOnly
+    compileOnly.extendsFrom(modCompileOnly)
+    modRuntimeOnly
+    runtimeOnly.extendsFrom(modRuntimeOnly)
+}
 
-    runs {
-        client { client() }
-        server { server() }
+String remapTaskName = propertyBool('enable_shadow') ? 'remapShadowJar' : 'remapJar'
 
-        data {
-            data()
-            programArguments.addAll(
-                    "--mod", "appmek",
-                    "--all",
-                    "--output", file("src/generated/resources/").getAbsolutePath(),
-                    "--existing", file("src/main/resources/").getAbsolutePath())
+unimined.minecraft {
+    version '1.12.2'
+
+    mappings {
+        mcp('stable', '39-1.12')
+    }
+
+    cleanroom {
+        if (propertyBool('use_access_transformer')) {
+            accessTransformer "${rootProject.projectDir}/src/main/resources/${propertyString('access_transformer_locations')}"
+        }
+        loader '0.5.12-alpha'
+        runs.auth.username = propertyString('minecraft_username')
+        runs.all {
+            systemProperty('crl.dev.mixin', "${propertyString('mod_id')}.default.mixins.json,${propertyString('mod_id')}.mod.mixins.json")
+            def extraArgs = propertyString('extra_jvm_args')
+            if (extraArgs != null && !extraArgs.trim().isEmpty()) {
+                jvmArgs += extraArgs.split { '\\s+' }.toList()
+            }
+            if (propertyBool('enable_foundation_debug')) {
+                systemProperty('foundation.dump', 'true')
+                systemProperty('foundation.verbose', 'true')
+            }
+            if (propertyBool('is_coremod')) {
+                systemProperty('fml.coreMods.load', propertyString('coremod_plugin_class_name'))
+            }
+        }
+    }
+
+    defaultRemapJar = false
+
+    String jarTaskName = propertyBool('enable_shadow') ? 'shadowJar' : 'jar'
+
+    remap(tasks.named(jarTaskName).get()) {
+        mixinRemap {
+            enableBaseMixin()
+            enableMixinExtra()
+            disableRefmap()
         }
     }
 
     mods {
-        appmek {
-            sourceSet sourceSets.main
+        remap(configurations.modCompileOnly)
+        remap(configurations.modRuntimeOnly)
+    }
+}
+
+dependencies {
+    if (propertyBool('use_asset_mover')) {
+        implementation "com.cleanroommc:assetmover:${propertyString('asset_mover_version')}"
+    }
+    if (propertyBool('enable_junit_testing')) {
+        testImplementation 'org.junit.jupiter:junit-jupiter:6.0.3'
+        testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    }
+}
+
+apply from: 'gradle/scripts/dependencies.gradle'
+
+processResources {
+    rename '(.+_at.cfg)', 'META-INF/$1'
+    def resourceProps = [
+        mod_id               : propertyString('mod_id'),
+        mod_name             : propertyString('mod_name'),
+        mod_version          : propertyString('mod_version'),
+        mod_description      : propertyString('mod_description'),
+        mod_authors          : propertyStringList('mod_authors', ',').collect { it.strip() }.join('", "'),
+        mod_credits          : propertyString('mod_credits'),
+        mod_license          : propertyString('mod_license'),
+        mod_url              : propertyString('mod_url'),
+        mod_issue_tracker_url: propertyString('mod_issue_tracker_url'),
+        mod_update_json      : propertyString('mod_update_json'),
+        mod_icon_item        : propertyString('mod_icon_item'),
+        mod_logo_path        : propertyString('mod_logo_path'),
+        mod_icon_path        : propertyString('mod_icon_path'),
+        mod_background_path  : propertyString('mod_background_path')
+    ]
+    inputs.properties(resourceProps)
+    filesMatching(['mcmod.info', 'pack.mcmeta']) {
+        expand(resourceProps)
+    }
+}
+
+tasks.register('syncDevRuntimeResources', Copy) {
+    from sourceSets.main.output.resourcesDir
+    into sourceSets.main.java.classesDirectory
+    dependsOn tasks.named('classes'), tasks.named('processResources')
+    doFirst {
+        delete fileTree(sourceSets.main.java.classesDirectory) {
+            include 'META-INF/**'
+            include 'assets/**'
+            include '*.json'
+            include '*.info'
+            include '*.png'
         }
     }
 }
 
-tasks.withType(JavaCompile).configureEach {
-    options.encoding = "UTF-8"
+tasks.matching { it.name in ['runClient', 'runServer'] }.configureEach {
+    dependsOn tasks.named('syncDevRuntimeResources')
 }
 
-// This block of code expands all declared replace properties in the specified resource targets.
-// A missing property will result in an error. Properties are expanded using ${} Groovy notation.
-// When "copyIdeResources" is enabled, this will also run before the game launches in IDE environments.
-// See https://docs.gradle.org/current/dsl/org.gradle.language.jvm.tasks.ProcessResources.html
-tasks.withType(ProcessResources).configureEach {
-    var replaceProperties = [
-            version: version,
-            loader_version_range: loader_version_range,
-            neo_version_range: neo_version_range,
-            ae2_version_range: ae2_version_range,
-            mekanism_version_range: mekanism_version_range,
-    ]
-    inputs.properties(replaceProperties)
-
-    filesMatching(["META-INF/neoforge.mods.toml"]) {
-        expand replaceProperties
+idea {
+    module {
+        inheritOutputDirs = true
     }
-}
-
-/////////////
-// Spotless
-spotless {
-    java {
-        target("src/main/java/**/*.java")
-
-        endWithNewline()
-        leadingTabsToSpaces()
-        removeUnusedImports()
-        toggleOffOn()
-        eclipse().configFile("codeformat/codeformat.xml")
-        importOrderFile("codeformat/ae2.importorder")
-    }
-
-    format("json") {
-        target("src/*/resources/**/*.json")
-        targetExclude("src/generated/resources/**")
-        prettier().config(parser: "json")
-    }
-}
-
-////////////////
-// CurseForge
-System.getenv("CURSEFORGE")?.with { String key ->
-    curseforge {
-        apiKey = key
-
-        project {
-            id = "574300"
-            changelogType = "markdown"
-            changelog = "View changelog at [the release page](https://github.com/AppliedEnergistics/Applied-Mekanistics/releases/tag/${version})"
-
-            if (version.contains("alpha")) {
-                releaseType = "alpha"
-            } else if (version.contains("beta")) {
-                releaseType = "beta"
-            } else {
-                releaseType = "release"
-            }
-
-            addGameVersion("${minecraft_version}")
-            addGameVersion("NeoForge")
-
-            mainArtifact(jar) {
-                displayName = "${project.version}"
-
-                relations {
-                    requiredDependency("applied-energistics-2")
-                    requiredDependency("mekanism")
+    project {
+        settings {
+            runConfigurations {
+                '1. Build'(Gradle) {
+                    taskNames = ['build']
+                }
+                '2. Run Client'(Gradle) {
+                    taskNames = ['runClient']
+                }
+                '3. Run Server'(Gradle) {
+                    taskNames = ['runServer']
                 }
             }
         }
     }
 }
 
-////////////////
-// Modrinth
-modrinth {
-    token.set(System.getenv("MODRINTH"))
-    projectId.set("applied-mekanistics")
-    changelog.set("View changelog at [the release page](https://github.com/AppliedEnergistics/Applied-Mekanistics/releases/tag/${version})")
-    versionNumber.set(project.version)
+if (!propertyBool('enable_shadow')) {
+    shadowJar.enabled = false
+}
 
-    if (version.contains("alpha")) {
-        versionType.set("alpha")
-    } else if (version.contains("beta")) {
-        versionType.set("beta")
-    } else {
-        versionType.set("release")
+compileJava {
+    sourceCompatibility = targetCompatibility = JavaVersion.toVersion(25)
+}
+
+jar {
+    dependsOn tasks.named('syncDevRuntimeResources')
+    archiveClassifier = 'dev'
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    if (configurations.contain.size() > 0) {
+        into('/') {
+            from configurations.contain
+        }
     }
+    doFirst {
+        manifest {
+            def attributeMap = [:]
+            attributeMap['ModType'] = 'CRL'
+            attributeMap['MixinConfigs'] = "${propertyString('mod_id')}.default.mixins.json,${propertyString('mod_id')}.mod.mixins.json"
+            if (configurations.contain.size() > 0) {
+                attributeMap['ContainedDeps'] = configurations.contain.collect { it.name }.join(' ')
+                attributeMap['NonModDeps'] = true
+            }
+            if (propertyBool('is_coremod')) {
+                attributeMap['FMLCorePlugin'] = propertyString('coremod_plugin_class_name')
+                if (propertyBool('coremod_includes_mod')) {
+                    attributeMap['FMLCorePluginContainsFMLMod'] = true
+                }
+            }
+            if (propertyBool('use_access_transformer')) {
+                attributeMap['FMLAT'] = propertyString('access_transformer_locations')
+            }
+            attributes(attributeMap)
+        }
+    }
+    finalizedBy(tasks.named(remapTaskName).get())
+}
 
-    uploadFile.set(jar)
-    gameVersions.add(minecraft_version)
-    loaders.add("neoforge")
+shadowJar {
+    configurations = [project.configurations.shadow]
+    archiveClassifier = 'shadow'
+}
 
-    dependencies {
-        required.project("ae2")
-        required.project("mekanism")
+tasks.named(remapTaskName).configure {
+    doFirst {
+        logging.captureStandardOutput LogLevel.INFO
+    }
+    doLast {
+        logging.captureStandardOutput LogLevel.QUIET
     }
 }
 
-tasks.modrinth.onlyIf {
-    System.getenv("MODRINTH")
+compileTestJava {
+    dependsOn tasks.named('syncDevRuntimeResources')
+    sourceCompatibility = targetCompatibility = JavaVersion.toVersion(25)
 }
+
+test {
+    useJUnitPlatform()
+    javaLauncher.set(javaToolchains.launcherFor {
+        languageVersion = JavaLanguageVersion.of(25)
+    })
+    if (propertyBool('show_testing_output')) {
+        testLogging {
+            showStandardStreams = true
+        }
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+sourceSets {
+    main {
+        java {
+            exclude 'me/ramidzkh/mekae2/data/**'
+            exclude 'me/ramidzkh/mekae2/integration/emi/**'
+            exclude 'me/ramidzkh/mekae2/integration/jade/**'
+            exclude 'me/ramidzkh/mekae2/integration/jei/**'
+            exclude 'me/ramidzkh/mekae2/qio/**'
+        }
+    }
+    test {
+        compileClasspath += sourceSets.main.compileClasspath
+        runtimeClasspath += sourceSets.main.runtimeClasspath
+    }
+}
+
+apply from: 'gradle/scripts/publishing.gradle'
+apply from: 'gradle/scripts/extra.gradle'

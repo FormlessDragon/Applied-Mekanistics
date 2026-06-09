@@ -1,0 +1,36 @@
+apply from: 'gradle/scripts/helpers.gradle'
+
+repositories {
+    flatDir {
+        dirs 'lib'
+    }
+    maven {
+        name = 'CleanroomMC'
+        url = 'https://maven.cleanroommc.com'
+    }
+    maven {
+        name = 'CurseMaven'
+        url = 'https://cursemaven.com'
+    }
+    maven {
+        name = 'CleanroomCurseMaven'
+        url = 'https://curse.cleanroommc.com'
+    }
+    maven {
+        name = 'ModMaven'
+        url = 'https://modmaven.dev/'
+    }
+    mavenCentral()
+    mavenLocal()
+}
+
+dependencies {
+    compileOnly 'com.cleanroommc:sponge-mixin:0.20.13+mixin.0.8.7'
+    if (propertyBool('enable_lwjglx')) {
+        compileOnly 'com.cleanroommc:lwjglx:1.0.0'
+    }
+
+    modImplementation name: propertyString('supergiant_dev_jar')
+    modCompileOnly "curse.maven:mekanism-268560:${propertyString('mekanism_file_id')}"
+    modRuntimeOnly "curse.maven:mekanism-268560:${propertyString('mekanism_file_id')}"
+}

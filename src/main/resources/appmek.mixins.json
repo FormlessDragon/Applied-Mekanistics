@@ -1,9 +1,0 @@
-{
-  "required": true,
-  "minVersion": "0.8.5",
-  "package": "me.ramidzkh.mekae2.mixin",
-  "mixins": ["CondenserMEStorageMixin", "MEInventoryHandlerMixin"],
-  "injectors": {
-    "defaultRequire": 1
-  }
-}

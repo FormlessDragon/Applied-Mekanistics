@@ -1,121 +1,185 @@
 package me.ramidzkh.mekae2.ae2;
 
-import java.util.ArrayList;
 import java.util.List;
 
-import com.mojang.blaze3d.vertex.PoseStack;
-
+import ae2.api.client.AEKeyRenderHandler;
+import ae2.api.client.AEKeyRendering;
+import ae2.util.Platform;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import mekanism.api.gas.Gas;
+import mekanism.api.gas.GasStack;
+import mekanism.client.render.MekanismRenderer;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.client.renderer.texture.TextureAtlas;
-import net.minecraft.network.chat.Component;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.TooltipFlag;
-import net.minecraft.world.level.Level;
-import net.neoforged.bus.api.IEventBus;
-import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
+import net.minecraft.client.renderer.BufferBuilder;
+import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.client.renderer.texture.TextureMap;
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TextComponentString;
+import net.minecraft.world.World;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
+import org.lwjgl.opengl.GL11;
 
-import appeng.api.client.AEKeyRenderHandler;
-import appeng.api.client.AEKeyRendering;
-import appeng.client.gui.style.Blitter;
-import appeng.util.Platform;
-
+@SideOnly(Side.CLIENT)
 public class AMChemicalStackRenderer implements AEKeyRenderHandler<MekanismKey> {
 
-    public static void initialize(IEventBus bus) {
-        bus.addListener((FMLClientSetupEvent event) -> event.enqueueWork(() -> {
-            AEKeyRendering.register(MekanismKeyType.TYPE, MekanismKey.class, new AMChemicalStackRenderer());
-        }));
+    private static boolean initialized;
+
+    public static synchronized void initialize() {
+        if (initialized) {
+            return;
+        }
+        AEKeyRendering.register(MekanismKeyType.TYPE, MekanismKey.class, new AMChemicalStackRenderer());
+        initialized = true;
     }
 
     @Override
-    public void drawInGui(Minecraft minecraft, GuiGraphics guiGraphics, int x, int y, MekanismKey what) {
-        var stack = what.getStack();
-
-        // MekanismRenderer.getSprite
-        Blitter.sprite(
-                Minecraft.getInstance().getTextureAtlas(TextureAtlas.LOCATION_BLOCKS)
-                        .apply(stack.getChemical().getIcon()))
-                .colorRgb(stack.getChemicalTint())
-                // Most fluid texture have transparency, but we want an opaque slot
-                .blending(false)
-                .dest(x, y, 16, 16)
-                .blit(guiGraphics);
+    public void drawInGui(Minecraft minecraft, int x, int y, MekanismKey what) {
+        GasStack stack = what.toStack(1);
+        TextureAtlasSprite sprite = getSprite(what.getGas());
+        RenderState renderState = RenderState.capture();
+        GlStateManager.pushMatrix();
+        try {
+            GlStateManager.enableBlend();
+            GlStateManager.disableLighting();
+            Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
+            drawTexturedQuad(x, y, 16, 16, sprite, stack);
+        } finally {
+            renderState.restore();
+            GlStateManager.color(1.0f, 1.0f, 1.0f, 1.0f);
+            GlStateManager.popMatrix();
+        }
     }
 
     @Override
-    public void drawOnBlockFace(PoseStack poseStack, MultiBufferSource buffers, MekanismKey what, float scale,
-            int combinedLight, Level level) {
-        var stack = what.getStack();
-        var sprite = Minecraft.getInstance().getTextureAtlas(TextureAtlas.LOCATION_BLOCKS)
-                .apply(stack.getChemical().getIcon());
-        var color = stack.getChemicalTint();
+    public void drawOnBlockFace(MekanismKey what, float scale, int combinedLight, World level) {
+        GasStack stack = what.toStack(1);
+        TextureAtlasSprite sprite = getSprite(what.getGas());
+        float x0 = -scale / 2.0f;
+        float y0 = -scale / 2.0f;
+        float x1 = scale / 2.0f;
+        float y1 = scale / 2.0f;
+        RenderState renderState = RenderState.capture();
 
-        poseStack.pushPose();
-        // Push it out of the block face a bit to avoid z-fighting
-        poseStack.translate(0, 0, 0.01f);
+        GlStateManager.pushMatrix();
+        try {
+            GlStateManager.enableBlend();
+            GlStateManager.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA,
+                GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
+            GlStateManager.disableAlpha();
+            GlStateManager.disableLighting();
+            GlStateManager.disableCull();
+            Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
+            MekanismRenderer.color(stack);
 
-        var buffer = buffers.getBuffer(RenderType.solid());
-
-        // In comparison to items, make it _slightly_ smaller because item icons
-        // usually don't extend to the full size.
-        scale -= 0.05f;
-
-        // y is flipped here
-        var x0 = -scale / 2;
-        var y0 = scale / 2;
-        var x1 = scale / 2;
-        var y1 = -scale / 2;
-
-        var transform = poseStack.last().pose();
-        buffer.addVertex(transform, x0, y1, 0)
-                .setColor(color)
-                .setUv(sprite.getU0(), sprite.getV1())
-                .setOverlay(OverlayTexture.NO_OVERLAY)
-                .setLight(combinedLight)
-                .setNormal(0, 0, 1);
-        buffer.addVertex(transform, x1, y1, 0)
-                .setColor(color)
-                .setUv(sprite.getU1(), sprite.getV1())
-                .setOverlay(OverlayTexture.NO_OVERLAY)
-                .setLight(combinedLight)
-                .setNormal(0, 0, 1);
-        buffer.addVertex(transform, x1, y0, 0)
-                .setColor(color)
-                .setUv(sprite.getU1(), sprite.getV0())
-                .setOverlay(OverlayTexture.NO_OVERLAY)
-                .setLight(combinedLight)
-                .setNormal(0, 0, 1);
-        buffer.addVertex(transform, x0, y0, 0)
-                .setColor(color)
-                .setUv(sprite.getU0(), sprite.getV0())
-                .setOverlay(OverlayTexture.NO_OVERLAY)
-                .setLight(combinedLight)
-                .setNormal(0, 0, 1);
-        poseStack.popPose();
+            Tessellator tessellator = Tessellator.getInstance();
+            BufferBuilder buffer = tessellator.getBuffer();
+            buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
+            buffer.pos(x0, y0, 0.0001f).tex(sprite.getMinU(), sprite.getMinV()).endVertex();
+            buffer.pos(x0, y1, 0.0001f).tex(sprite.getMinU(), sprite.getMaxV()).endVertex();
+            buffer.pos(x1, y1, 0.0001f).tex(sprite.getMaxU(), sprite.getMaxV()).endVertex();
+            buffer.pos(x1, y0, 0.0001f).tex(sprite.getMaxU(), sprite.getMinV()).endVertex();
+            tessellator.draw();
+        } finally {
+            renderState.restore();
+            GlStateManager.color(1.0f, 1.0f, 1.0f, 1.0f);
+            GlStateManager.popMatrix();
+        }
     }
 
     @Override
-    public Component getDisplayName(MekanismKey stack) {
+    public ITextComponent getDisplayName(MekanismKey stack) {
         return stack.getDisplayName();
     }
 
     @Override
-    public List<Component> getTooltip(MekanismKey stack) {
-        var tooltip = new ArrayList<Component>();
+    public List<ITextComponent> getTooltip(MekanismKey stack) {
+        List<ITextComponent> tooltip = new ObjectArrayList<>(2);
         tooltip.add(getDisplayName(stack));
+        tooltip.add(new TextComponentString(Platform.getModName(stack.getModId())));
+        return tooltip;
+    }
 
-        stack.getStack().appendHoverText(Item.TooltipContext.EMPTY, tooltip, TooltipFlag.NORMAL);
+    private static TextureAtlasSprite getSprite(Gas gas) {
+        return getSpriteOrMissing(gas, Minecraft.getMinecraft().getTextureMapBlocks());
+    }
 
-        // Heuristic: If the last line doesn't include the modname, add it ourselves
-        var modName = Platform.formatModName(stack.getModId());
-        if (tooltip.isEmpty() || !tooltip.getLast().getString().equals(modName)) {
-            tooltip.add(Component.literal(modName));
+    static TextureAtlasSprite getSpriteOrMissing(Gas gas, TextureMap textureMap) {
+        var icon = gas.getIcon();
+        if (icon == null) {
+            return textureMap.getMissingSprite();
+        }
+        return textureMap.getAtlasSprite(icon.toString());
+    }
+
+    static String getSpriteName(Gas gas) {
+        var icon = gas.getIcon();
+        return icon == null ? TextureMap.LOCATION_MISSING_TEXTURE.toString() : icon.toString();
+    }
+
+    private static void drawTexturedQuad(int x, int y, int width, int height, TextureAtlasSprite sprite,
+                                         GasStack stack) {
+        MekanismRenderer.color(stack);
+        Tessellator tessellator = Tessellator.getInstance();
+        BufferBuilder buffer = tessellator.getBuffer();
+        buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
+        buffer.pos(x, y + height, 0).tex(sprite.getMinU(), sprite.getMaxV()).endVertex();
+        buffer.pos(x + width, y + height, 0).tex(sprite.getMaxU(), sprite.getMaxV()).endVertex();
+        buffer.pos(x + width, y, 0).tex(sprite.getMaxU(), sprite.getMinV()).endVertex();
+        buffer.pos(x, y, 0).tex(sprite.getMinU(), sprite.getMinV()).endVertex();
+        tessellator.draw();
+    }
+
+    private record RenderState(boolean blendEnabled, boolean alphaEnabled, boolean lightingEnabled,
+                               boolean cullEnabled) {
+        private static RenderState capture() {
+            return new RenderState(
+                GL11.glIsEnabled(GL11.GL_BLEND),
+                GL11.glIsEnabled(GL11.GL_ALPHA_TEST),
+                GL11.glIsEnabled(GL11.GL_LIGHTING),
+                GL11.glIsEnabled(GL11.GL_CULL_FACE));
         }
 
-        return tooltip;
+        private void restore() {
+            setBlend(blendEnabled);
+            setAlpha(alphaEnabled);
+            setLighting(lightingEnabled);
+            setCull(cullEnabled);
+        }
+
+        private static void setBlend(boolean enabled) {
+            if (enabled) {
+                GlStateManager.enableBlend();
+            } else {
+                GlStateManager.disableBlend();
+            }
+        }
+
+        private static void setAlpha(boolean enabled) {
+            if (enabled) {
+                GlStateManager.enableAlpha();
+            } else {
+                GlStateManager.disableAlpha();
+            }
+        }
+
+        private static void setLighting(boolean enabled) {
+            if (enabled) {
+                GlStateManager.enableLighting();
+            } else {
+                GlStateManager.disableLighting();
+            }
+        }
+
+        private static void setCull(boolean enabled) {
+            if (enabled) {
+                GlStateManager.enableCull();
+            } else {
+                GlStateManager.disableCull();
+            }
+        }
     }
 }

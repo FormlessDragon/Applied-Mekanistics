@@ -3,61 +3,69 @@ package me.ramidzkh.mekae2.ae2;
 import java.util.List;
 import java.util.Objects;
 
-import com.mojang.serialization.Codec;
-import com.mojang.serialization.MapCodec;
-import com.mojang.serialization.codecs.RecordCodecBuilder;
-
+import ae2.api.stacks.AEKey;
+import ae2.api.stacks.AEKeyType;
+import ae2.core.AELog;
+import mekanism.api.gas.Gas;
+import mekanism.api.gas.GasStack;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTBase;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.network.PacketBuffer;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TextComponentString;
+import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.GlobalPos;
-import net.minecraft.core.HolderLookup;
-import net.minecraft.core.component.DataComponentType;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.NbtOps;
-import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.tags.TagKey;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.Level;
+public final class MekanismKey extends AEKey {
 
-import mekanism.api.chemical.Chemical;
-import mekanism.api.chemical.ChemicalStack;
-import mekanism.api.radiation.IRadiationManager;
+    private final Gas gas;
+    private final int hashCode;
 
-import appeng.api.stacks.AEKey;
-import appeng.api.stacks.AEKeyType;
-import appeng.core.AELog;
-
-public class MekanismKey extends AEKey {
-
-    public static final MapCodec<MekanismKey> MAP_CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
-            Chemical.HOLDER_CODEC.fieldOf("id").forGetter(key -> key.getStack().getChemicalHolder()))
-            .apply(instance, chemical -> MekanismKey.of(new ChemicalStack(chemical, 1))));
-    public static final Codec<MekanismKey> CODEC = MAP_CODEC.codec();
-
-    private final ChemicalStack stack;
-
-    private MekanismKey(ChemicalStack stack) {
-        this.stack = stack;
+    private MekanismKey(Gas gas) {
+        this.gas = Objects.requireNonNull(gas, "gas");
+        this.hashCode = gas.hashCode();
     }
 
     @Nullable
-    public static MekanismKey of(ChemicalStack stack) {
-        if (stack.isEmpty()) {
+    public static MekanismKey of(@Nullable GasStack stack) {
+        if (stack == null || stack.getGas() == null || stack.amount <= 0) {
             return null;
         }
-
-        return new MekanismKey(stack.copy());
+        return new MekanismKey(stack.getGas());
     }
 
-    public ChemicalStack getStack() {
-        return stack;
+    @Nullable
+    public static MekanismKey of(@Nullable Gas gas) {
+        return gas == null ? null : new MekanismKey(gas);
     }
 
-    public ChemicalStack withAmount(long amount) {
-        return stack.copyWithAmount(amount);
+    @Nullable
+    public static MekanismKey fromTag(NBTTagCompound tag) {
+        try {
+            return of(GasStack.readFromNBT(tag));
+        } catch (Exception e) {
+            AELog.debug("Tried to load an invalid Mekanism gas key from NBT: %s", tag, e);
+            return null;
+        }
+    }
+
+    public static MekanismKey fromPacket(PacketBuffer data) {
+        try {
+            return fromTag(data.readCompoundTag());
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Could not read Mekanism gas key", e);
+        }
+    }
+
+    public GasStack toStack(long amount) {
+        return new GasStack(this.gas, clampToInt(amount));
+    }
+
+    public Gas getGas() {
+        return this.gas;
     }
 
     @Override
@@ -70,52 +78,49 @@ public class MekanismKey extends AEKey {
         return this;
     }
 
-    @Nullable
-    public static MekanismKey fromTag(HolderLookup.Provider registries, CompoundTag tag) {
-        var ops = registries.createSerializationContext(NbtOps.INSTANCE);
-
-        try {
-            return CODEC.decode(ops, tag).getOrThrow().getFirst();
-        } catch (Exception e) {
-            AELog.debug("Tried to load an invalid chemical key from NBT: %s", tag, e);
-            return null;
-        }
-    }
-
     @Override
-    public CompoundTag toTag(HolderLookup.Provider registries) {
-        var ops = registries.createSerializationContext(NbtOps.INSTANCE);
-        return (CompoundTag) CODEC.encodeStart(ops, this).getOrThrow();
+    public NBTTagCompound toTag() {
+        return toStack(1).write(new NBTTagCompound());
     }
 
     @Override
     public Object getPrimaryKey() {
-        return stack.getChemical();
+        return this.gas;
     }
 
     @Override
     public ResourceLocation getId() {
-        return stack.getChemicalHolder().getKey().location();
+        return new ResourceLocation("mekanism", this.gas.getName());
     }
 
     @Override
-    public void addDrops(long amount, List<ItemStack> drops, Level level, BlockPos pos) {
-        IRadiationManager.INSTANCE.dumpRadiation(GlobalPos.of(level.dimension(), pos), withAmount(amount));
+    public void writeToPacket(PacketBuffer data) {
+        data.writeCompoundTag(toTag());
     }
 
     @Override
-    protected Component computeDisplayName() {
-        return stack.getChemical().getTextComponent();
+    public GasStack getReadOnlyStack() {
+        return toStack(1);
     }
 
     @Override
-    public boolean isTagged(TagKey<?> tag) {
-        // This will just return false for incorrectly cast tags
-        return stack.is((TagKey<Chemical>) tag);
+    protected ITextComponent computeDisplayName() {
+        String name = this.gas.getLocalizedName();
+        return new TextComponentString(name == null || name.isEmpty() ? this.gas.getName() : name);
     }
 
     @Override
-    public <T> @Nullable T get(DataComponentType<T> type) {
+    public void addDrops(long amount, List<ItemStack> drops, World level, BlockPos pos) {
+        // Gases are voided when their container is broken.
+    }
+
+    @Override
+    public boolean isTagged(String tag) {
+        return false;
+    }
+
+    @Override
+    public @Nullable NBTBase get(String componentId) {
         return null;
     }
 
@@ -125,33 +130,24 @@ public class MekanismKey extends AEKey {
     }
 
     @Override
-    public void writeToPacket(RegistryFriendlyByteBuf data) {
-        ChemicalStack.STREAM_CODEC.encode(data, stack);
-    }
-
-    public static MekanismKey fromPacket(RegistryFriendlyByteBuf data) {
-        return new MekanismKey(ChemicalStack.STREAM_CODEC.decode(data));
-    }
-
-    @Override
     public boolean equals(Object o) {
-        if (this == o)
-            return true;
-        if (o == null || getClass() != o.getClass())
-            return false;
-        var that = (MekanismKey) o;
-        return Objects.equals(stack.getChemical(), that.stack.getChemical());
+        return this == o || o instanceof MekanismKey that && this.gas == that.gas;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(stack.getChemical());
+        return this.hashCode;
     }
 
     @Override
     public String toString() {
-        return "MekanismKey{" +
-                "stack=" + stack.getChemical() +
-                '}';
+        return "MekanismKey{" + this.gas.getName() + '}';
+    }
+
+    private static int clampToInt(long amount) {
+        if (amount <= 0) {
+            return 0;
+        }
+        return amount > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) amount;
     }
 }
