@@ -1,0 +1,21 @@
+{
+  "type": "forge:ore_shapeless",
+  "ingredients": [
+    {
+      "item": "ae2:chest"
+    },
+    {
+      "item": "ae2:cell_component_4k"
+    },
+    {
+      "item": "ae2:energy_cell"
+    },
+    {
+      "item": "mekeng:chemical_cell_housing"
+    }
+  ],
+  "result": {
+    "item": "mekeng:portable_chemical_cell_4k",
+    "count": 1
+  }
+}

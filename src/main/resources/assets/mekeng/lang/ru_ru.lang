@@ -1,0 +1,17 @@
+text.mekeng.chemical=Химикат
+text.mekeng.gas=Химикат
+text.mekeng.creative_tab=Applied Mekanistics
+itemGroup.mekeng=Applied Mekanistics
+text.mekeng.qio_frequency=Переодичность QIO (%s)
+item.mekeng.chemical_cell_housing.name=Корпус химической ячейки ME
+item.mekeng.chemical_storage_cell_1k.name=Химическая ячейка памяти ME 1К
+item.mekeng.chemical_storage_cell_4k.name=Химическая ячейка памяти ME 4К
+item.mekeng.chemical_storage_cell_16k.name=Химическая ячейка памяти ME 16К
+item.mekeng.chemical_storage_cell_64k.name=Химическая ячейка памяти ME 64К
+item.mekeng.chemical_storage_cell_256k.name=Химическая ячейка памяти ME 256К
+item.mekeng.portable_chemical_cell_16k.name=Переносная химическая ячейка 16К
+item.mekeng.portable_chemical_cell_1k.name=Переносная химическая ячейка 1К
+item.mekeng.portable_chemical_cell_4k.name=Переносная химическая ячейка 4К
+item.mekeng.portable_chemical_cell_64k.name=Переносная химическая ячейка 64К
+item.mekeng.portable_chemical_cell_256k.name=Переносная химическая ячейка 256К
+item.mekeng.chemical_p2p_tunnel.name=Химический P2P тоннель

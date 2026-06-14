@@ -1,0 +1,15 @@
+{
+  "type": "forge:ore_shapeless",
+  "ingredients": [
+    {
+      "item": "mekeng:chemical_cell_housing"
+    },
+    {
+      "item": "ae2:cell_component_256k"
+    }
+  ],
+  "result": {
+    "item": "mekeng:chemical_storage_cell_256k",
+    "count": 1
+  }
+}

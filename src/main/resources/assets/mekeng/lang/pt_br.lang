@@ -1,0 +1,17 @@
+text.mekeng.chemical=Químico
+text.mekeng.gas=Químico
+text.mekeng.creative_tab=Applied Mekanistics
+itemGroup.mekeng=Applied Mekanistics
+text.mekeng.qio_frequency=OIQ Frequência (%s)
+item.mekeng.chemical_cell_housing.name=Cápsula para Células de Armazenamento de Químicos
+item.mekeng.chemical_storage_cell_1k.name=Célula de Armazenamento de 1k para Químicos
+item.mekeng.chemical_storage_cell_4k.name=Célula de Armazenamento de 4k para Químicos
+item.mekeng.chemical_storage_cell_16k.name=Célula de Armazenamento de 16k para Químicos
+item.mekeng.chemical_storage_cell_64k.name=Célula de Armazenamento de 64k para Químicos
+item.mekeng.chemical_storage_cell_256k.name=Célula de Armazenamento de 256k para Químicos
+item.mekeng.portable_chemical_cell_16k.name=Célula de Armazenamento Portátil de 16k para Químicos
+item.mekeng.portable_chemical_cell_1k.name=Célula de Armazenamento Portátil de 1k para Químicos
+item.mekeng.portable_chemical_cell_4k.name=Célula de Armazenamento Portátil de 4k para Químicos
+item.mekeng.portable_chemical_cell_64k.name=Célula de Armazenamento Portátil de 64k para Químicos
+item.mekeng.portable_chemical_cell_256k.name=Célula de Armazenamento Portátil de 256k para Químicos
+item.mekeng.chemical_p2p_tunnel.name=Túnel P2P para Químicos

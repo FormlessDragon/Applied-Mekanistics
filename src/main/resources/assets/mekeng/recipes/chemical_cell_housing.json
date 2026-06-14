@@ -1,0 +1,25 @@
+{
+  "type": "forge:ore_shaped",
+  "pattern": [
+    "QRQ",
+    "R R",
+    "OOO"
+  ],
+  "key": {
+    "Q": {
+      "item": "ae2:quartz_glass"
+    },
+    "R": {
+      "type": "forge:ore_dict",
+      "ore": "dustRedstone"
+    },
+    "O": {
+      "type": "forge:ore_dict",
+      "ore": "ingotOsmium"
+    }
+  },
+  "result": {
+    "item": "mekeng:chemical_cell_housing",
+    "count": 1
+  }
+}
