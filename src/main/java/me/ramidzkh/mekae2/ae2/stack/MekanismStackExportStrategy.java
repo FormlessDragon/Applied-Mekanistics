@@ -15,6 +15,7 @@ import net.minecraft.world.WorldServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@SuppressWarnings("UnstableApiUsage")
 public final class MekanismStackExportStrategy implements StackExportStrategy {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MekanismStackExportStrategy.class);

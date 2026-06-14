@@ -6,7 +6,7 @@ import java.util.stream.Stream;
 import ae2.api.stacks.AEFluidKey;
 import ae2.api.stacks.AEKey;
 import ae2.api.stacks.AEKeyType;
-import me.ramidzkh.mekae2.AMText;
+import me.ramidzkh.mekae2.util.AMText;
 import me.ramidzkh.mekae2.AppliedMekanistics;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.PacketBuffer;

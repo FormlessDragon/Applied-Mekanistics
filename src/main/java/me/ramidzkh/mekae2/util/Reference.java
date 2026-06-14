@@ -1,4 +1,4 @@
-package me.ramidzkh.mekae2;
+package me.ramidzkh.mekae2.util;
 
 public final class Reference {
 

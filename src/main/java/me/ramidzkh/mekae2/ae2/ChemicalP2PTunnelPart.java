@@ -18,7 +18,9 @@ import org.jetbrains.annotations.Nullable;
 
 public class ChemicalP2PTunnelPart extends CapabilityP2PTunnelPart<ChemicalP2PTunnelPart, IGasHandler> {
 
-    private static final P2PModels MODELS = new P2PModels(AppliedMekanistics.id("part/chemical_p2p_tunnel"));
+    private static final P2PModels MODELS = new P2PModels(
+        AppliedMekanistics.id("part/p2p/p2p_tunnel_chemical"),
+        AppliedMekanistics.id("part/p2p_tunnel_chemical"));
     private static final IGasHandler NULL_GAS_HANDLER = new NullGasHandler();
 
     @PartModels
@@ -43,7 +45,7 @@ public class ChemicalP2PTunnelPart extends CapabilityP2PTunnelPart<ChemicalP2PTu
         public int receiveGas(EnumFacing side, GasStack stack, boolean doTransfer) {
             var outputs = getOutputs();
             int outputTunnels = outputs.size();
-            int amount = stack == null ? 0 : stack.amount;
+            int amount = stack.amount;
 
             if (outputTunnels == 0 || amount <= 0) {
                 return 0;

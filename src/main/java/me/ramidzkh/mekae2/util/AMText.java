@@ -1,4 +1,4 @@
-package me.ramidzkh.mekae2;
+package me.ramidzkh.mekae2.util;
 
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentTranslation;

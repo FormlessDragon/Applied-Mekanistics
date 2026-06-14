@@ -1,4 +1,4 @@
-package me.ramidzkh.mekae2;
+package me.ramidzkh.mekae2.item;
 
 import java.util.Objects;
 import java.util.function.Function;
@@ -11,9 +11,9 @@ import ae2.items.parts.PartItem;
 import ae2.items.parts.PartModelsHelper;
 import ae2.items.materials.MaterialItem;
 import ae2.items.storage.StorageTier;
+import me.ramidzkh.mekae2.AppliedMekanistics;
+import me.ramidzkh.mekae2.util.Reference;
 import me.ramidzkh.mekae2.ae2.ChemicalP2PTunnelPart;
-import me.ramidzkh.mekae2.item.ChemicalPortableCellItem;
-import me.ramidzkh.mekae2.item.ChemicalStorageCell;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -119,6 +119,7 @@ public final class AMItems {
         };
     }
 
+    @SuppressWarnings("SameParameterValue")
     private static <T extends IPart> ItemDefinition<PartItem<T>> createPart(
         ResourceLocation id, Class<T> partClass, Function<IPartItem<T>, T> factory) {
         PartModels.registerModels(PartModelsHelper.createModels(partClass));

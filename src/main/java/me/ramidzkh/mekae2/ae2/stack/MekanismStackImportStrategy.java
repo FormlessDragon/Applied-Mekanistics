@@ -14,6 +14,7 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.WorldServer;
 
+@SuppressWarnings("UnstableApiUsage")
 public final class MekanismStackImportStrategy implements StackImportStrategy {
 
     private final WorldServer level;

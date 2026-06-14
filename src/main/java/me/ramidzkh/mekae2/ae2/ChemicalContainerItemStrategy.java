@@ -4,6 +4,7 @@ import ae2.api.behaviors.ContainerItemStrategy;
 import ae2.api.config.Actionable;
 import ae2.api.stacks.GenericStack;
 import com.google.common.primitives.Ints;
+import mekanism.api.gas.Gas;
 import mekanism.api.gas.GasStack;
 import mekanism.api.gas.IGasHandler;
 import mekanism.api.gas.IGasItem;
@@ -15,6 +16,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumFacing;
 import org.jetbrains.annotations.Nullable;
 
+@SuppressWarnings("UnstableApiUsage")
 public class ChemicalContainerItemStrategy
     implements ContainerItemStrategy<MekanismKey, ChemicalContainerItemStrategy.Context> {
 
@@ -118,13 +120,15 @@ public class ChemicalContainerItemStrategy
             return null;
         }
 
-        IGasHandler handler = stack.getCapability(Capabilities.GAS_HANDLER_CAPABILITY, null);
-        if (handler != null) {
-            return new GasHandlerContainer(handler);
-        }
-
         if (stack.getItem() instanceof IGasItem item) {
             return new GasItemContainer(stack, item);
+        }
+
+        if (Capabilities.GAS_HANDLER_CAPABILITY != null) {
+            IGasHandler handler = stack.getCapability(Capabilities.GAS_HANDLER_CAPABILITY, null);
+            if (handler != null) {
+                return new GasHandlerContainer(handler);
+            }
         }
 
         return null;
@@ -135,6 +139,7 @@ public class ChemicalContainerItemStrategy
         @Nullable
         GasStack getContainedGas();
 
+        @SuppressWarnings("BooleanMethodIsAlwaysInverted")
         boolean canInsert(MekanismKey what);
 
         int insert(GasStack stack, boolean execute);
@@ -188,12 +193,27 @@ public class ChemicalContainerItemStrategy
 
         @Override
         public int insert(GasStack stack, boolean execute) {
-            if (!execute) {
-                ItemStack copy = this.stack.copy();
-                copy.setCount(1);
-                return this.item.addGas(copy, stack);
+            int insertable = getInsertableAmount(stack);
+            if (!execute || insertable <= 0) {
+                return insertable;
             }
-            return this.item.addGas(this.stack, stack);
+
+            ItemStack target = this.stack;
+            int inserted = 0;
+            while (inserted < insertable) {
+                int before = getStoredAmount(target, stack.getGas());
+                int step = this.item.addGas(target, stack.copy().withAmount(insertable - inserted));
+                if (step <= 0) {
+                    break;
+                }
+
+                inserted += Math.min(step, insertable - inserted);
+                int after = getStoredAmount(target, stack.getGas());
+                if (after <= before) {
+                    break;
+                }
+            }
+            return inserted;
         }
 
         @Override
@@ -203,21 +223,79 @@ public class ChemicalContainerItemStrategy
 
         @Override
         public GasStack extract(MekanismKey what, int amount, boolean execute) {
-            ItemStack target = this.stack;
-            if (!execute) {
-                target = this.stack.copy();
-                target.setCount(1);
+            int extractable = getExtractableAmount(what, amount);
+            if (extractable <= 0) {
+                return null;
             }
 
-            GasStack extracted = this.item.removeGas(target, amount);
-            return extracted != null && extracted.getGas() == what.getGas() ? extracted : null;
+            if (!execute) {
+                return what.toStack(extractable);
+            }
+
+            ItemStack target = this.stack;
+            int extractedAmount = 0;
+            while (extractedAmount < extractable) {
+                int before = getStoredAmount(target, what.getGas());
+                GasStack extracted = this.item.removeGas(target, extractable - extractedAmount);
+                if (extracted == null || extracted.getGas() != what.getGas() || extracted.amount <= 0) {
+                    break;
+                }
+
+                extractedAmount += Math.min(extracted.amount, extractable - extractedAmount);
+                int after = getStoredAmount(target, what.getGas());
+                if (after >= before) {
+                    if (isFullCreativeGasItem(target, before)) {
+                        extractedAmount = extractable;
+                    }
+                    break;
+                }
+            }
+            return extractedAmount > 0 ? what.toStack(extractedAmount) : null;
+        }
+
+        private int getInsertableAmount(GasStack stack) {
+            MekanismKey key = MekanismKey.of(stack);
+            if (key == null || stack.amount <= 0 || !canInsert(key)) {
+                return 0;
+            }
+
+            GasStack stored = this.item.getGas(this.stack);
+            if (stored != null && stored.getGas() != stack.getGas()) {
+                return 0;
+            }
+
+            int storedAmount = stored == null ? 0 : Math.max(0, stored.amount);
+            int capacity = Math.max(0, this.item.getMaxGas(this.stack));
+            return Math.clamp(capacity - storedAmount, 0, stack.amount);
+        }
+
+        private int getExtractableAmount(MekanismKey what, int amount) {
+            if (amount <= 0) {
+                return 0;
+            }
+
+            GasStack stored = this.item.getGas(this.stack);
+            if (stored == null || stored.getGas() != what.getGas()) {
+                return 0;
+            }
+
+            return Math.clamp(stored.amount, 0, amount);
+        }
+
+        private int getStoredAmount(ItemStack stack, Gas gas) {
+            GasStack stored = this.item.getGas(stack);
+            return stored != null && stored.getGas() == gas ? Math.max(0, stored.amount) : 0;
+        }
+
+        private boolean isFullCreativeGasItem(ItemStack stack, int storedAmount) {
+            return storedAmount == Integer.MAX_VALUE && this.item.getMaxGas(stack) == Integer.MAX_VALUE;
         }
     }
 
-    interface Context {
+    public interface Context {
         ItemStack getStack();
 
-        void addOverflow(ItemStack stack);
+        void addOverflow(@Nullable ItemStack stack);
     }
 
     private record CarriedContext(EntityPlayer player) implements Context {
@@ -228,7 +306,7 @@ public class ChemicalContainerItemStrategy
         }
 
         @Override
-        public void addOverflow(ItemStack stack) {
+        public void addOverflow(@Nullable ItemStack stack) {
             if (this.player.inventory.getItemStack().isEmpty()) {
                 this.player.inventory.setItemStack(stack);
             } else {
@@ -245,7 +323,7 @@ public class ChemicalContainerItemStrategy
         }
 
         @Override
-        public void addOverflow(ItemStack stack) {
+        public void addOverflow(@Nullable ItemStack stack) {
             this.player.inventory.addItemStackToInventory(stack);
         }
     }

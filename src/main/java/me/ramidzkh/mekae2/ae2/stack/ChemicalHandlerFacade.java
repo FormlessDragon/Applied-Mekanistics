@@ -8,7 +8,7 @@ import ae2.api.storage.MEStorage;
 import ae2.core.localization.GuiText;
 import mekanism.api.gas.GasStack;
 import mekanism.api.gas.IGasHandler;
-import me.ramidzkh.mekae2.AMText;
+import me.ramidzkh.mekae2.util.AMText;
 import me.ramidzkh.mekae2.ae2.MekanismKey;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.text.ITextComponent;

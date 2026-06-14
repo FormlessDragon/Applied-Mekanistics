@@ -1,10 +1,12 @@
-package me.ramidzkh.mekae2;
+package me.ramidzkh.mekae2.client;
 
 import ae2.api.client.StorageCellModels;
 import ae2.core.definitions.ItemDefinition;
 import ae2.items.storage.BasicStorageCell;
 import ae2.items.tools.powered.PortableCellItem;
+import me.ramidzkh.mekae2.util.Reference;
 import me.ramidzkh.mekae2.ae2.AMChemicalStackRenderer;
+import me.ramidzkh.mekae2.item.AMItems;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.renderer.color.IItemColor;
 import net.minecraft.client.renderer.color.ItemColors;

@@ -1,4 +1,4 @@
 @ParametersAreNonnullByDefault
-package me.ramidzkh.mekae2.integration.jei;
+package me.ramidzkh.mekae2.client;
 
 import javax.annotation.ParametersAreNonnullByDefault;

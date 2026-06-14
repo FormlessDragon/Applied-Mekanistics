@@ -120,6 +120,7 @@ public class AMChemicalStackRenderer implements AEKeyRenderHandler<MekanismKey> 
         return icon == null ? TextureMap.LOCATION_MISSING_TEXTURE.toString() : icon.toString();
     }
 
+    @SuppressWarnings("SameParameterValue")
     private static void drawTexturedQuad(int x, int y, int width, int height, TextureAtlasSprite sprite,
                                          GasStack stack) {
         MekanismRenderer.color(stack);

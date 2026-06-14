@@ -10,6 +10,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.WorldServer;
 import org.jetbrains.annotations.Nullable;
 
+@SuppressWarnings("UnstableApiUsage")
 public final class MekanismExternalStorageStrategy implements ExternalStorageStrategy {
 
     private final WorldServer level;
