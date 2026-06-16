@@ -12,8 +12,8 @@ import ae2.items.parts.PartModelsHelper;
 import ae2.items.materials.MaterialItem;
 import ae2.items.storage.StorageTier;
 import me.ramidzkh.mekae2.AppliedMekanistics;
-import me.ramidzkh.mekae2.util.Reference;
 import me.ramidzkh.mekae2.ae2.GasP2PTunnelPart;
+import me.ramidzkh.mekae2.Tags;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -22,10 +22,10 @@ import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
-@Mod.EventBusSubscriber(modid = Reference.MOD_ID)
+@Mod.EventBusSubscriber(modid = Tags.MOD_ID)
 public final class AMItems {
 
-    public static final CreativeTabs CREATIVE_TAB = new CreativeTabs(Reference.MOD_ID) {
+    public static final CreativeTabs CREATIVE_TAB = new CreativeTabs(Tags.MOD_ID) {
         @Override
         public ItemStack createIcon() {
             return GAS_CELL_64K.stack();

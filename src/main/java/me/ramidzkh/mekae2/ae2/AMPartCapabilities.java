@@ -7,7 +7,7 @@ import ae2.parts.crafting.PatternProviderPart;
 import ae2.parts.misc.InterfacePart;
 import ae2.tile.networking.TileCableBus;
 import me.ramidzkh.mekae2.AppliedMekanistics;
-import me.ramidzkh.mekae2.util.Reference;
+import me.ramidzkh.mekae2.Tags;
 import mekanism.api.gas.IGasHandler;
 import mekanism.common.capabilities.Capabilities;
 import net.minecraftforge.common.capabilities.Capability;
@@ -15,7 +15,7 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 @SuppressWarnings("UnstableApiUsage")
-@Mod.EventBusSubscriber(modid = Reference.MOD_ID)
+@Mod.EventBusSubscriber(modid = Tags.MOD_ID)
 public final class AMPartCapabilities {
 
     private static boolean registered;

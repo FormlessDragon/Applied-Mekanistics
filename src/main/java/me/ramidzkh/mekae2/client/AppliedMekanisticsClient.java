@@ -4,8 +4,8 @@ import ae2.api.client.StorageCellModels;
 import ae2.core.definitions.ItemDefinition;
 import ae2.items.storage.BasicStorageCell;
 import ae2.items.tools.powered.PortableCellItem;
-import me.ramidzkh.mekae2.util.Reference;
 import me.ramidzkh.mekae2.ae2.AMGasStackRenderer;
+import me.ramidzkh.mekae2.Tags;
 import me.ramidzkh.mekae2.item.AMItems;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.renderer.color.IItemColor;
@@ -21,7 +21,7 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
 @SideOnly(Side.CLIENT)
-@Mod.EventBusSubscriber(modid = Reference.MOD_ID, value = Side.CLIENT)
+@Mod.EventBusSubscriber(modid = Tags.MOD_ID, value = Side.CLIENT)
 public final class AppliedMekanisticsClient {
 
     private static boolean driveCellModelsRegistered;
@@ -66,7 +66,7 @@ public final class AppliedMekanisticsClient {
         if (item != null) {
             StorageCellModels.registerModel(
                 item,
-                new ResourceLocation(Reference.MOD_ID, driveCellModelPath(tier)));
+                new ResourceLocation(Tags.MOD_ID, driveCellModelPath(tier)));
         }
     }
 

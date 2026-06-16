@@ -1,5 +1,6 @@
 package me.ramidzkh.mekae2.util;
 
+import me.ramidzkh.mekae2.Tags;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentTranslation;
 
@@ -10,7 +11,7 @@ public enum AMText {
     public final String key;
 
     AMText(String key) {
-        this.key = "text." + Reference.MOD_ID + "." + key;
+        this.key = "text." + Tags.MOD_ID + "." + key;
     }
 
     public ITextComponent text(Object... params) {
