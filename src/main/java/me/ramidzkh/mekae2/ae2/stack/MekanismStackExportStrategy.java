@@ -7,7 +7,7 @@ import ae2.api.stacks.AEKey;
 import ae2.api.storage.StorageHelper;
 import mekanism.api.gas.IGasHandler;
 import mekanism.common.capabilities.Capabilities;
-import me.ramidzkh.mekae2.ae2.MekanismKey;
+import me.ramidzkh.mekae2.ae2.AEGasKey;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
@@ -32,7 +32,7 @@ public final class MekanismStackExportStrategy implements StackExportStrategy {
 
     @Override
     public long transfer(StackTransferContext context, AEKey what, long amount) {
-        if (!(what instanceof MekanismKey mekanismKey)) {
+        if (!(what instanceof AEGasKey AEGasKey)) {
             return 0;
         }
 
@@ -44,12 +44,12 @@ public final class MekanismStackExportStrategy implements StackExportStrategy {
         var inv = context.getInternalStorage();
         long extracted = StorageHelper.poweredExtraction(context.getEnergySource(), inv.getInventory(), what, amount,
                 context.getActionSource(), Actionable.SIMULATE);
-        long wasInserted = storage.receiveGas(fromSide, mekanismKey.toStack(extracted), false);
+        long wasInserted = storage.receiveGas(fromSide, AEGasKey.toStack(extracted), false);
 
         if (wasInserted > 0) {
             extracted = StorageHelper.poweredExtraction(context.getEnergySource(), inv.getInventory(), what,
                     wasInserted, context.getActionSource(), Actionable.MODULATE);
-            wasInserted = storage.receiveGas(fromSide, mekanismKey.toStack(extracted), true);
+            wasInserted = storage.receiveGas(fromSide, AEGasKey.toStack(extracted), true);
 
             if (wasInserted < extracted) {
                 long leftover = extracted - wasInserted;
@@ -67,7 +67,7 @@ public final class MekanismStackExportStrategy implements StackExportStrategy {
 
     @Override
     public long push(AEKey what, long amount, Actionable mode) {
-        if (!(what instanceof MekanismKey mekanismKey)) {
+        if (!(what instanceof AEGasKey aeGasKey)) {
             return 0;
         }
 
@@ -76,7 +76,7 @@ public final class MekanismStackExportStrategy implements StackExportStrategy {
             return 0;
         }
 
-        return storage.receiveGas(fromSide, mekanismKey.toStack(amount), mode == Actionable.MODULATE);
+        return storage.receiveGas(fromSide, aeGasKey.toStack(amount), mode == Actionable.MODULATE);
     }
 
     private IGasHandler getAdjacentHandler() {

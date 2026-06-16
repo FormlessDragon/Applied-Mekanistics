@@ -19,7 +19,7 @@ import org.jetbrains.annotations.Nullable;
 
 @SuppressWarnings("UnstableApiUsage")
 public class GasContainerItemStrategy
-    implements ContainerItemStrategy<MekanismKey, GasContainerItemStrategy.Context> {
+    implements ContainerItemStrategy<AEGasKey, GasContainerItemStrategy.Context> {
 
     @Override
     @Nullable
@@ -34,7 +34,7 @@ public class GasContainerItemStrategy
         }
 
         GasStack gas = container.getContainedGas();
-        MekanismKey key = MekanismKey.of(gas);
+        AEGasKey key = AEGasKey.of(gas);
         return key == null ? null : new GenericStack(key, gas.amount);
     }
 
@@ -59,7 +59,7 @@ public class GasContainerItemStrategy
     }
 
     @Override
-    public long extract(Context context, MekanismKey what, long amount, Actionable mode) {
+    public long extract(Context context, AEGasKey what, long amount, Actionable mode) {
         ItemStack stack = context.getStack();
         ItemStack copy = stack.copy();
         copy.setCount(1);
@@ -79,7 +79,7 @@ public class GasContainerItemStrategy
     }
 
     @Override
-    public long insert(Context context, MekanismKey what, long amount, Actionable mode) {
+    public long insert(Context context, AEGasKey what, long amount, Actionable mode) {
         ItemStack stack = context.getStack();
         ItemStack copy = stack.copy();
         copy.setCount(1);
@@ -98,12 +98,12 @@ public class GasContainerItemStrategy
     }
 
     @Override
-    public void playFillSound(EntityPlayer player, MekanismKey what) {
+    public void playFillSound(EntityPlayer player, AEGasKey what) {
         player.playSound(SoundEvents.ITEM_BUCKET_FILL, 1.0F, 1.0F);
     }
 
     @Override
-    public void playEmptySound(EntityPlayer player, MekanismKey what) {
+    public void playEmptySound(EntityPlayer player, AEGasKey what) {
         player.playSound(SoundEvents.ITEM_BUCKET_EMPTY, 1.0F, 1.0F);
     }
 
@@ -153,14 +153,14 @@ public class GasContainerItemStrategy
         GasStack getContainedGas();
 
         @SuppressWarnings("BooleanMethodIsAlwaysInverted")
-        boolean canInsert(MekanismKey what);
+        boolean canInsert(AEGasKey what);
 
         int insert(GasStack stack, boolean execute);
 
-        boolean canExtract(MekanismKey what);
+        boolean canExtract(AEGasKey what);
 
         @Nullable
-        GasStack extract(MekanismKey what, int amount, boolean execute);
+        GasStack extract(AEGasKey what, int amount, boolean execute);
     }
 
     private record GasHandlerContainer(IGasHandler handler) implements GasContainer {
@@ -173,7 +173,7 @@ public class GasContainerItemStrategy
                 }
 
                 GasStack gas = tank.getGas();
-                if (MekanismKey.of(gas) != null) {
+                if (AEGasKey.of(gas) != null) {
                     return gas;
                 }
             }
@@ -181,7 +181,7 @@ public class GasContainerItemStrategy
         }
 
         @Override
-        public boolean canInsert(MekanismKey what) {
+        public boolean canInsert(AEGasKey what) {
             return this.handler.canReceiveGas(EnumFacing.UP, what.getGas());
         }
 
@@ -210,12 +210,12 @@ public class GasContainerItemStrategy
         }
 
         @Override
-        public boolean canExtract(MekanismKey what) {
+        public boolean canExtract(AEGasKey what) {
             return this.handler.canDrawGas(EnumFacing.UP, what.getGas());
         }
 
         @Override
-        public GasStack extract(MekanismKey what, int amount, boolean execute) {
+        public GasStack extract(AEGasKey what, int amount, boolean execute) {
             int extractable = getExtractableAmount(what, amount);
             if (extractable <= 0) {
                 return null;
@@ -246,7 +246,7 @@ public class GasContainerItemStrategy
         }
 
         private int getInsertableAmount(GasStack stack) {
-            MekanismKey key = MekanismKey.of(stack);
+            AEGasKey key = AEGasKey.of(stack);
             if (key == null || stack.amount <= 0 || !canInsert(key)) {
                 return 0;
             }
@@ -275,7 +275,7 @@ public class GasContainerItemStrategy
             return Math.clamp(capacity - storedAmount, 0, stack.amount);
         }
 
-        private int getExtractableAmount(MekanismKey what, int amount) {
+        private int getExtractableAmount(AEGasKey what, int amount) {
             if (amount <= 0 || !canExtract(what)) {
                 return 0;
             }
@@ -343,7 +343,7 @@ public class GasContainerItemStrategy
         }
 
         @Override
-        public boolean canInsert(MekanismKey what) {
+        public boolean canInsert(AEGasKey what) {
             return this.item.canReceiveGas(this.stack, what.getGas());
         }
 
@@ -373,12 +373,12 @@ public class GasContainerItemStrategy
         }
 
         @Override
-        public boolean canExtract(MekanismKey what) {
+        public boolean canExtract(AEGasKey what) {
             return this.item.canProvideGas(this.stack, what.getGas());
         }
 
         @Override
-        public GasStack extract(MekanismKey what, int amount, boolean execute) {
+        public GasStack extract(AEGasKey what, int amount, boolean execute) {
             int extractable = getExtractableAmount(what, amount);
             if (extractable <= 0) {
                 return null;
@@ -410,7 +410,7 @@ public class GasContainerItemStrategy
         }
 
         private int getInsertableAmount(GasStack stack) {
-            MekanismKey key = MekanismKey.of(stack);
+            AEGasKey key = AEGasKey.of(stack);
             if (key == null || stack.amount <= 0 || !canInsert(key)) {
                 return 0;
             }
@@ -425,7 +425,7 @@ public class GasContainerItemStrategy
             return Math.clamp(capacity - storedAmount, 0, stack.amount);
         }
 
-        private int getExtractableAmount(MekanismKey what, int amount) {
+        private int getExtractableAmount(AEGasKey what, int amount) {
             if (amount <= 0) {
                 return 0;
             }

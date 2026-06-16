@@ -9,7 +9,7 @@ import ae2.core.localization.GuiText;
 import mekanism.api.gas.GasStack;
 import mekanism.api.gas.IGasHandler;
 import me.ramidzkh.mekae2.util.AMText;
-import me.ramidzkh.mekae2.ae2.MekanismKey;
+import me.ramidzkh.mekae2.ae2.AEGasKey;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentTranslation;
@@ -21,7 +21,7 @@ public record GasHandlerFacade(IGasHandler handler, EnumFacing side, boolean ext
 
     @Override
     public long insert(AEKey what, long amount, Actionable mode, IActionSource source) {
-        if (!(what instanceof MekanismKey key) || amount <= 0) {
+        if (!(what instanceof AEGasKey key) || amount <= 0) {
             return 0;
         }
 
@@ -36,7 +36,7 @@ public record GasHandlerFacade(IGasHandler handler, EnumFacing side, boolean ext
 
     @Override
     public long extract(AEKey what, long amount, Actionable mode, IActionSource source) {
-        if (!(what instanceof MekanismKey key) || amount <= 0 || !handler.canDrawGas(side, key.getGas())) {
+        if (!(what instanceof AEGasKey key) || amount <= 0 || !handler.canDrawGas(side, key.getGas())) {
             return 0;
         }
 
@@ -65,7 +65,7 @@ public record GasHandlerFacade(IGasHandler handler, EnumFacing side, boolean ext
             }
 
             GasStack stack = tank.getGas();
-            MekanismKey key = MekanismKey.of(stack);
+            AEGasKey key = AEGasKey.of(stack);
             if (key == null) {
                 continue;
             }

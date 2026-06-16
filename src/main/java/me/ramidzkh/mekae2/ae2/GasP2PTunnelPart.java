@@ -71,7 +71,7 @@ public class GasP2PTunnelPart extends CapabilityP2PTunnelPart<GasP2PTunnelPart, 
             }
 
             if (doTransfer) {
-                deductTransportCost(total, MekanismKeyType.TYPE);
+                deductTransportCost(total, AEGasKeyType.TYPE);
             }
 
             return total;
@@ -149,7 +149,7 @@ public class GasP2PTunnelPart extends CapabilityP2PTunnelPart<GasP2PTunnelPart, 
                 var result = input.get().drawGas(side, amount, doTransfer);
 
                 if (doTransfer && result != null) {
-                    deductTransportCost(result.amount, MekanismKeyType.TYPE);
+                    deductTransportCost(result.amount, AEGasKeyType.TYPE);
                 }
 
                 return result;

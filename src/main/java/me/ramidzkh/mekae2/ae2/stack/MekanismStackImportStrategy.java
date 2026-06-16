@@ -7,8 +7,8 @@ import ae2.core.AELog;
 import mekanism.api.gas.GasStack;
 import mekanism.api.gas.IGasHandler;
 import mekanism.common.capabilities.Capabilities;
-import me.ramidzkh.mekae2.ae2.MekanismKey;
-import me.ramidzkh.mekae2.ae2.MekanismKeyType;
+import me.ramidzkh.mekae2.ae2.AEGasKey;
+import me.ramidzkh.mekae2.ae2.AEGasKeyType;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
@@ -29,7 +29,7 @@ public final class MekanismStackImportStrategy implements StackImportStrategy {
 
     @Override
     public boolean transfer(StackTransferContext context) {
-        if (!context.isKeyTypeEnabled(MekanismKeyType.TYPE)) {
+        if (!context.isKeyTypeEnabled(AEGasKeyType.TYPE)) {
             return false;
         }
 
@@ -39,7 +39,7 @@ public final class MekanismStackImportStrategy implements StackImportStrategy {
         }
 
         long remainingTransferAmount = context.getOperationsRemaining()
-                * (long) MekanismKeyType.TYPE.getAmountPerOperation();
+                * (long) AEGasKeyType.TYPE.getAmountPerOperation();
         var inv = context.getInternalStorage();
 
         for (var tank : handler.getTankInfo()) {
@@ -48,7 +48,7 @@ public final class MekanismStackImportStrategy implements StackImportStrategy {
             }
 
             GasStack stack = tank.getGas();
-            MekanismKey resource = MekanismKey.of(stack);
+            AEGasKey resource = AEGasKey.of(stack);
             if (resource == null || context.isInFilter(resource) == context.isInverted()
                     || !handler.canDrawGas(fromSide, resource.getGas())) {
                 continue;
@@ -74,7 +74,7 @@ public final class MekanismStackImportStrategy implements StackImportStrategy {
                 }
             }
 
-            long opsUsed = Math.max(1, inserted / MekanismKeyType.TYPE.getAmountPerOperation());
+            long opsUsed = Math.max(1, inserted / AEGasKeyType.TYPE.getAmountPerOperation());
             context.reduceOperationsRemaining(opsUsed);
             remainingTransferAmount -= inserted;
         }

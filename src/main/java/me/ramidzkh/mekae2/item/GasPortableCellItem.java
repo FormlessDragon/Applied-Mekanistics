@@ -6,20 +6,20 @@ import ae2.api.stacks.AEKey;
 import ae2.container.GuiIds;
 import ae2.items.storage.StorageTier;
 import ae2.items.tools.powered.PortableCellItem;
-import me.ramidzkh.mekae2.ae2.MekanismKey;
-import me.ramidzkh.mekae2.ae2.MekanismKeyType;
+import me.ramidzkh.mekae2.ae2.AEGasKey;
+import me.ramidzkh.mekae2.ae2.AEGasKeyType;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 
 public class GasPortableCellItem extends PortableCellItem {
 
     public GasPortableCellItem(int totalTypes, StorageTier tier, double powerCapacity, int defaultColor) {
-        super(MekanismKeyType.TYPE, totalTypes, GuiIds.GuiKey.PORTABLE_FLUID_CELL, tier, powerCapacity, defaultColor);
+        super(AEGasKeyType.TYPE, totalTypes, GuiIds.GuiKey.PORTABLE_FLUID_CELL, tier, powerCapacity, defaultColor);
     }
 
     @Override
     public boolean isBlackListed(ItemStack cellItem, AEKey requestedAddition) {
-        return !(requestedAddition instanceof MekanismKey);
+        return !(requestedAddition instanceof AEGasKey);
     }
 
     @Override

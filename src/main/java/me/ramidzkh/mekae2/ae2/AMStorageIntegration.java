@@ -17,16 +17,16 @@ public final class AMStorageIntegration {
     }
 
     public static void init() {
-        AEKeyTypes.register(MekanismKeyType.TYPE);
+        AEKeyTypes.register(AEGasKeyType.TYPE);
         registerGasCapacity();
         registerGenericGasStorageAdapter();
-        ContainerItemStrategy.register(MekanismKeyType.TYPE, MekanismKey.class, new GasContainerItemStrategy());
+        ContainerItemStrategy.register(AEGasKeyType.TYPE, AEGasKey.class, new GasContainerItemStrategy());
     }
 
     private static void registerGasCapacity() {
         var fluidCapacity = GenericSlotCapacities.getMap().getOrDefault(AEKeyType.fluids(), 0);
         if (fluidCapacity != 0) {
-            GenericSlotCapacities.register(MekanismKeyType.TYPE, fluidCapacity);
+            GenericSlotCapacities.register(AEGasKeyType.TYPE, fluidCapacity);
         }
     }
 

@@ -21,7 +21,7 @@ public class GenericStackGasStorage implements IGasHandler {
 
     @Override
     public int receiveGas(EnumFacing side, GasStack stack, boolean doTransfer) {
-        var what = MekanismKey.of(stack);
+        var what = AEGasKey.of(stack);
         if (what == null) {
             return 0;
         }
@@ -38,7 +38,7 @@ public class GenericStackGasStorage implements IGasHandler {
     @Nullable
     public GasStack drawGas(EnumFacing side, int amount, boolean doTransfer) {
         for (int i = 0; i < this.inv.size(); i++) {
-            if (this.inv.getKey(i) instanceof MekanismKey what) {
+            if (this.inv.getKey(i) instanceof AEGasKey what) {
                 return extract(what, amount, doTransfer);
             }
         }
@@ -47,7 +47,7 @@ public class GenericStackGasStorage implements IGasHandler {
 
     @Override
     public boolean canReceiveGas(EnumFacing side, Gas gas) {
-        var what = MekanismKey.of(gas);
+        var what = AEGasKey.of(gas);
         if (what == null || !this.inv.canInsert()) {
             return false;
         }
@@ -66,7 +66,7 @@ public class GenericStackGasStorage implements IGasHandler {
             return false;
         }
 
-        var what = MekanismKey.of(gas);
+        var what = AEGasKey.of(gas);
         if (what == null) {
             return false;
         }
@@ -81,7 +81,7 @@ public class GenericStackGasStorage implements IGasHandler {
 
     @Override
     public GasTankInfo[] getTankInfo() {
-        if (!this.inv.isSupportedType(MekanismKeyType.TYPE)) {
+        if (!this.inv.isSupportedType(AEGasKeyType.TYPE)) {
             return IGasHandler.NONE;
         }
 
@@ -92,7 +92,7 @@ public class GenericStackGasStorage implements IGasHandler {
                 @Override
                 @Nullable
                 public GasStack getGas() {
-                    if (inv.getKey(slot) instanceof MekanismKey what) {
+                    if (inv.getKey(slot) instanceof AEGasKey what) {
                         return what.toStack(inv.getAmount(slot));
                     }
                     return null;
@@ -105,7 +105,7 @@ public class GenericStackGasStorage implements IGasHandler {
 
                 @Override
                 public int getMaxGas() {
-                    return Ints.saturatedCast(inv.getCapacity(MekanismKeyType.TYPE));
+                    return Ints.saturatedCast(inv.getCapacity(AEGasKeyType.TYPE));
                 }
             };
         }
@@ -113,7 +113,7 @@ public class GenericStackGasStorage implements IGasHandler {
     }
 
     @Nullable
-    private GasStack extract(MekanismKey what, int amount, boolean doTransfer) {
+    private GasStack extract(AEGasKey what, int amount, boolean doTransfer) {
         int extracted = 0;
         for (int i = 0; i < this.inv.size() && extracted < amount; i++) {
             extracted += Ints.saturatedCast(this.inv.extract(i, what, amount - extracted,

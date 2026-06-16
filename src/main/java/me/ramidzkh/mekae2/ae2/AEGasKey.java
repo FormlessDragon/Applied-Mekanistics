@@ -19,31 +19,31 @@ import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
-public final class MekanismKey extends AEKey {
+public final class AEGasKey extends AEKey {
 
     private final Gas gas;
     private final int hashCode;
 
-    private MekanismKey(Gas gas) {
+    private AEGasKey(Gas gas) {
         this.gas = Objects.requireNonNull(gas, "gas");
         this.hashCode = gas.hashCode();
     }
 
     @Nullable
-    public static MekanismKey of(@Nullable GasStack stack) {
+    public static AEGasKey of(@Nullable GasStack stack) {
         if (stack == null || stack.getGas() == null || stack.amount <= 0) {
             return null;
         }
-        return new MekanismKey(stack.getGas());
+        return new AEGasKey(stack.getGas());
     }
 
     @Nullable
-    public static MekanismKey of(@Nullable Gas gas) {
-        return gas == null ? null : new MekanismKey(gas);
+    public static AEGasKey of(@Nullable Gas gas) {
+        return gas == null ? null : new AEGasKey(gas);
     }
 
     @Nullable
-    public static MekanismKey fromTag(NBTTagCompound tag) {
+    public static AEGasKey fromTag(NBTTagCompound tag) {
         try {
             return of(GasStack.readFromNBT(tag));
         } catch (Exception e) {
@@ -52,7 +52,7 @@ public final class MekanismKey extends AEKey {
         }
     }
 
-    public static MekanismKey fromPacket(PacketBuffer data) {
+    public static AEGasKey fromPacket(PacketBuffer data) {
         try {
             return fromTag(data.readCompoundTag());
         } catch (Exception e) {
@@ -70,7 +70,7 @@ public final class MekanismKey extends AEKey {
 
     @Override
     public AEKeyType getType() {
-        return MekanismKeyType.TYPE;
+        return AEGasKeyType.TYPE;
     }
 
     @Override
@@ -131,7 +131,7 @@ public final class MekanismKey extends AEKey {
 
     @Override
     public boolean equals(Object o) {
-        return this == o || o instanceof MekanismKey that && this.gas == that.gas;
+        return this == o || o instanceof AEGasKey that && this.gas == that.gas;
     }
 
     @Override

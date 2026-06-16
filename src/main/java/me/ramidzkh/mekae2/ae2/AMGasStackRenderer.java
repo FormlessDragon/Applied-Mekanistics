@@ -24,7 +24,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import org.lwjgl.opengl.GL11;
 
 @SideOnly(Side.CLIENT)
-public class AMGasStackRenderer implements AEKeyRenderHandler<MekanismKey> {
+public class AMGasStackRenderer implements AEKeyRenderHandler<AEGasKey> {
 
     private static boolean initialized;
 
@@ -32,12 +32,12 @@ public class AMGasStackRenderer implements AEKeyRenderHandler<MekanismKey> {
         if (initialized) {
             return;
         }
-        AEKeyRendering.register(MekanismKeyType.TYPE, MekanismKey.class, new AMGasStackRenderer());
+        AEKeyRendering.register(AEGasKeyType.TYPE, AEGasKey.class, new AMGasStackRenderer());
         initialized = true;
     }
 
     @Override
-    public void drawInGui(Minecraft minecraft, int x, int y, MekanismKey what) {
+    public void drawInGui(Minecraft minecraft, int x, int y, AEGasKey what) {
         GasStack stack = what.toStack(1);
         TextureAtlasSprite sprite = getSprite(what.getGas());
         RenderState renderState = RenderState.capture();
@@ -55,7 +55,7 @@ public class AMGasStackRenderer implements AEKeyRenderHandler<MekanismKey> {
     }
 
     @Override
-    public void drawOnBlockFace(MekanismKey what, float scale, int combinedLight, World level) {
+    public void drawOnBlockFace(AEGasKey what, float scale, int combinedLight, World level) {
         GasStack stack = what.toStack(1);
         TextureAtlasSprite sprite = getSprite(what.getGas());
         float x0 = -scale / 2.0f;
@@ -91,12 +91,12 @@ public class AMGasStackRenderer implements AEKeyRenderHandler<MekanismKey> {
     }
 
     @Override
-    public ITextComponent getDisplayName(MekanismKey stack) {
+    public ITextComponent getDisplayName(AEGasKey stack) {
         return stack.getDisplayName();
     }
 
     @Override
-    public List<ITextComponent> getTooltip(MekanismKey stack) {
+    public List<ITextComponent> getTooltip(AEGasKey stack) {
         List<ITextComponent> tooltip = new ObjectArrayList<>(2);
         tooltip.add(getDisplayName(stack));
         tooltip.add(new TextComponentString(Platform.getModName(stack.getModId())));

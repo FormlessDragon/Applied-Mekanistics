@@ -12,8 +12,8 @@ public final class AMStackWorldBehaviors {
     }
 
     public static void init() {
-        StackWorldBehaviors.registerImportStrategy(MekanismKeyType.TYPE, MekanismStackImportStrategy::new);
-        StackWorldBehaviors.registerExportStrategy(MekanismKeyType.TYPE, MekanismStackExportStrategy::new);
-        StackWorldBehaviors.registerExternalStorageStrategy(MekanismKeyType.TYPE, MekanismExternalStorageStrategy::new);
+        StackWorldBehaviors.registerImportStrategy(AEGasKeyType.TYPE, MekanismStackImportStrategy::new);
+        StackWorldBehaviors.registerExportStrategy(AEGasKeyType.TYPE, MekanismStackExportStrategy::new);
+        StackWorldBehaviors.registerExternalStorageStrategy(AEGasKeyType.TYPE, MekanismExternalStorageStrategy::new);
     }
 }

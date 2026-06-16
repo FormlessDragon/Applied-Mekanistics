@@ -11,12 +11,12 @@ import me.ramidzkh.mekae2.AppliedMekanistics;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.PacketBuffer;
 
-public final class MekanismKeyType extends AEKeyType {
+public final class AEGasKeyType extends AEKeyType {
 
-    public static final AEKeyType TYPE = new MekanismKeyType();
+    public static final AEKeyType TYPE = new AEGasKeyType();
 
-    private MekanismKeyType() {
-        super(AppliedMekanistics.id("gas"), MekanismKey.class, AMText.GASES.text());
+    private AEGasKeyType() {
+        super(AppliedMekanistics.id("gas"), AEGasKey.class, AMText.GASES.text());
     }
 
     @Override
@@ -30,14 +30,14 @@ public final class MekanismKeyType extends AEKeyType {
     }
 
     @Override
-    public MekanismKey readFromPacket(PacketBuffer input) {
+    public AEGasKey readFromPacket(PacketBuffer input) {
         Objects.requireNonNull(input);
-        return MekanismKey.fromPacket(input);
+        return AEGasKey.fromPacket(input);
     }
 
     @Override
     public AEKey loadKeyFromTag(NBTTagCompound tag) {
-        return MekanismKey.fromTag(tag);
+        return AEGasKey.fromTag(tag);
     }
 
     @Override
