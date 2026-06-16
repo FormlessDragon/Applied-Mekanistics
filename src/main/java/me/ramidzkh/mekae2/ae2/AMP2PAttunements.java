@@ -20,7 +20,7 @@ public final class AMP2PAttunements {
         if (registered) {
             return;
         }
-        registered = registerGasAttunement(AMItems.CHEMICAL_P2P_TUNNEL.id());
+        registered = registerGasAttunement(AMItems.GAS_P2P_TUNNEL.id());
     }
 
     static boolean registerGasAttunement(ResourceLocation tunnelPart) {

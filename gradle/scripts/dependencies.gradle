@@ -27,7 +27,10 @@ dependencies {
         compileOnly 'com.cleanroommc:lwjglx:1.0.0'
     }
 
-    modRuntimeOnly "mezz:jei:4.31.2"
-    modImplementation "io.github.formlessdragon:AppliedEnergistics2-Supergiant:${ae2_mod_version}:dev"
+    modRuntimeOnly "mezz:jei:4.31.2:dev"
+    compileOnly "io.github.formlessdragon:AppliedEnergistics2-Supergiant:${ae2_mod_version}:dev"
+    modRuntimeOnly("io.github.formlessdragon:AppliedEnergistics2-Supergiant:${ae2_mod_version}:dev") {
+        transitive = false
+    }
     modImplementation "curse.maven:mekanism-268560:2835175"
 }

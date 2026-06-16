@@ -20,7 +20,7 @@ public final class AMStorageIntegration {
         AEKeyTypes.register(MekanismKeyType.TYPE);
         registerGasCapacity();
         registerGenericGasStorageAdapter();
-        ContainerItemStrategy.register(MekanismKeyType.TYPE, MekanismKey.class, new ChemicalContainerItemStrategy());
+        ContainerItemStrategy.register(MekanismKeyType.TYPE, MekanismKey.class, new GasContainerItemStrategy());
     }
 
     private static void registerGasCapacity() {
@@ -33,7 +33,7 @@ public final class AMStorageIntegration {
     private static void registerGenericGasStorageAdapter() {
         Capability<IGasHandler> gasCapability = Capabilities.GAS_HANDLER_CAPABILITY;
         if (gasCapability != null) {
-            GenericInternalInventoryAdapters.register(gasCapability, GenericStackChemicalStorage::new);
+            GenericInternalInventoryAdapters.register(gasCapability, GenericStackGasStorage::new);
         } else {
             AppliedMekanistics.LOGGER.warn("Mekanism gas capability is not available during AppMek storage setup");
         }

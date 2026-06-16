@@ -1,0 +1,15 @@
+{
+  "type": "forge:ore_shapeless",
+  "ingredients": [
+    {
+      "item": "mekeng:gas_cell_housing"
+    },
+    {
+      "item": "ae2:cell_component_1k"
+    }
+  ],
+  "result": {
+    "item": "mekeng:gas_storage_cell_1k",
+    "count": 1
+  }
+}

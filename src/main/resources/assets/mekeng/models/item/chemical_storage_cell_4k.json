@@ -1,6 +1,0 @@
-{
-  "parent": "minecraft:item/generated",
-  "textures": {
-    "layer0": "mekeng:item/chemical_storage_cell_4k"
-  }
-}

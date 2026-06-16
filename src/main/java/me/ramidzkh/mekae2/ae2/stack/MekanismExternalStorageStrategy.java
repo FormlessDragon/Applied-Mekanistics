@@ -31,7 +31,7 @@ public final class MekanismExternalStorageStrategy implements ExternalStorageStr
             return null;
         }
 
-        return new ChemicalHandlerFacade(storage, fromSide, extractableOnly, injectOrExtractCallback);
+        return new GasHandlerFacade(storage, fromSide, extractableOnly, injectOrExtractCallback);
     }
 
     private IGasHandler getAdjacentHandler() {

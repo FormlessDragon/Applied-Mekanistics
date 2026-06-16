@@ -5,7 +5,7 @@ import ae2.core.definitions.ItemDefinition;
 import ae2.items.storage.BasicStorageCell;
 import ae2.items.tools.powered.PortableCellItem;
 import me.ramidzkh.mekae2.util.Reference;
-import me.ramidzkh.mekae2.ae2.AMChemicalStackRenderer;
+import me.ramidzkh.mekae2.ae2.AMGasStackRenderer;
 import me.ramidzkh.mekae2.item.AMItems;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.renderer.color.IItemColor;
@@ -31,14 +31,14 @@ public final class AppliedMekanisticsClient {
 
     @SubscribeEvent
     public static void registerModels(ModelRegistryEvent event) {
-        registerInventoryModel(AMItems.CHEMICAL_CELL_HOUSING);
+        registerInventoryModel(AMItems.GAS_CELL_HOUSING);
         for (AMItems.Tier tier : AMItems.Tier.values()) {
             registerInventoryModel(AMItems.get(tier));
             registerInventoryModel(AMItems.getPortableCell(tier));
         }
         registerDriveCellModels();
-        registerInventoryModel(AMItems.CHEMICAL_P2P_TUNNEL);
-        AMChemicalStackRenderer.initialize();
+        registerInventoryModel(AMItems.GAS_P2P_TUNNEL);
+        AMGasStackRenderer.initialize();
     }
 
     @SubscribeEvent
@@ -82,7 +82,7 @@ public final class AppliedMekanisticsClient {
     }
 
     static String driveCellModelPath(AMItems.Tier tier) {
-        return "block/drive/cells/chemical_storage_cell_" + switch (tier) {
+        return "block/drive/cells/gas_storage_cell_" + switch (tier) {
             case _1K -> "1k";
             case _4K -> "4k";
             case _16K -> "16k";

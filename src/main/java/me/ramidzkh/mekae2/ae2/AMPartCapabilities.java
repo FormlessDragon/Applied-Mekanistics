@@ -53,7 +53,7 @@ public final class AMPartCapabilities {
 
     private static void register(RegisterPartCapabilitiesEvent event, Capability<IGasHandler> gasCapability) {
         event.addHostType(TileCableBus.class);
-        event.register(gasCapability, (part, _) -> part.getExposedApi(), ChemicalP2PTunnelPart.class);
+        event.register(gasCapability, (part, _) -> part.getExposedApi(), GasP2PTunnelPart.class);
         event.register(gasCapability,
             (part, _) -> GenericInternalInventoryAdapters.getCapability(part.getLogic().getReturnInv(), gasCapability),
             PatternProviderPart.class);
