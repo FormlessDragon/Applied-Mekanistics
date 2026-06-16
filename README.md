@@ -24,6 +24,18 @@ This project is based on [AppliedEnergistics/Applied-Mekanistics](https://github
 
 The upstream repository remains the original Appmek project and the primary reference for design, behavior, licensing, and attribution.
 
+## Maven
+
+```groovy
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation "io.github.formlessdragon:mekeng:${mod_version}:dev"
+}
+```
+
 ## License
 
 Everything is under the [LGPLv3][lgpl], but assets are under [CC BY-NC-SA 3.0][cc]
