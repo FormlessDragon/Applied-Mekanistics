@@ -32,7 +32,7 @@ public final class MekanismStackExportStrategy implements StackExportStrategy {
 
     @Override
     public long transfer(StackTransferContext context, AEKey what, long amount) {
-        if (!(what instanceof AEGasKey AEGasKey)) {
+        if (!(what instanceof AEGasKey aeGasKey)) {
             return 0;
         }
 
@@ -44,12 +44,12 @@ public final class MekanismStackExportStrategy implements StackExportStrategy {
         var inv = context.getInternalStorage();
         long extracted = StorageHelper.poweredExtraction(context.getEnergySource(), inv.getInventory(), what, amount,
                 context.getActionSource(), Actionable.SIMULATE);
-        long wasInserted = storage.receiveGas(fromSide, AEGasKey.toStack(extracted), false);
+        long wasInserted = storage.receiveGas(fromSide, aeGasKey.toStack(extracted), false);
 
         if (wasInserted > 0) {
             extracted = StorageHelper.poweredExtraction(context.getEnergySource(), inv.getInventory(), what,
                     wasInserted, context.getActionSource(), Actionable.MODULATE);
-            wasInserted = storage.receiveGas(fromSide, AEGasKey.toStack(extracted), true);
+            wasInserted = storage.receiveGas(fromSide, aeGasKey.toStack(extracted), true);
 
             if (wasInserted < extracted) {
                 long leftover = extracted - wasInserted;

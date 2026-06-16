@@ -5,7 +5,7 @@ plugins {
     id 'signing'
     id 'com.gradleup.shadow' version '9.4.1'
     id 'org.jetbrains.gradle.plugin.idea-ext' version '1.4.1'
-    id 'xyz.wagyourtail.unimined' version '1.4.18-kappa'
+    id 'xyz.wagyourtail.unimined' version '1.4.23-kappa'
 }
 
 import org.jetbrains.gradle.ext.Gradle
@@ -124,13 +124,7 @@ unimined.minecraft {
 
     String jarTaskName = propertyBool('enable_shadow') ? 'shadowJar' : 'jar'
 
-    remap(tasks.named(jarTaskName).get()) {
-        mixinRemap {
-            enableBaseMixin()
-            enableMixinExtra()
-            disableRefmap()
-        }
-    }
+    remap(tasks.named(jarTaskName).get())
 
     mods {
         remap(configurations.modCompileOnly)
@@ -269,7 +263,6 @@ jar {
         manifest {
             def attributeMap = [:]
             attributeMap['ModType'] = 'CRL'
-            attributeMap['MixinConfigs'] = "${propertyString('mod_id')}.default.mixins.json,${propertyString('mod_id')}.mod.mixins.json"
             if (configurations.contain.size() > 0) {
                 attributeMap['ContainedDeps'] = configurations.contain.collect { it.name }.join(' ')
                 attributeMap['NonModDeps'] = true

@@ -70,7 +70,7 @@ if (propertyBool('publish_to_maven')) {
                     }
                 }
                 pom.withXml {
-                    def pomNode = asNode()
+                    def pomNode = it.asNode()
                     pomNode.children().removeIf { it.name().toString() == 'dependencies' }
                 }
             }

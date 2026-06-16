@@ -8,6 +8,7 @@ import mekanism.api.gas.GasStack;
 import mekanism.api.gas.GasTankInfo;
 import mekanism.api.gas.IGasHandler;
 import net.minecraft.util.EnumFacing;
+import javax.annotation.Nonnull;
 import org.jetbrains.annotations.Nullable;
 
 @SuppressWarnings("UnstableApiUsage")
@@ -80,6 +81,7 @@ public class GenericStackGasStorage implements IGasHandler {
     }
 
     @Override
+    @Nonnull
     public GasTankInfo[] getTankInfo() {
         if (!this.inv.isSupportedType(AEGasKeyType.TYPE)) {
             return IGasHandler.NONE;

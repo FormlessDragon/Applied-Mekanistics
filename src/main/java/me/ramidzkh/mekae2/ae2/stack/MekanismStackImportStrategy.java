@@ -79,7 +79,7 @@ public final class MekanismStackImportStrategy implements StackImportStrategy {
             remainingTransferAmount -= inserted;
         }
 
-        return false;
+        return context.hasDoneWork();
     }
 
     private IGasHandler getAdjacentHandler() {

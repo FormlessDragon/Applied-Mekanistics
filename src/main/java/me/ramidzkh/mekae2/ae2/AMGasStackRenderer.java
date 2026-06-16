@@ -115,11 +115,6 @@ public class AMGasStackRenderer implements AEKeyRenderHandler<AEGasKey> {
         return textureMap.getAtlasSprite(icon.toString());
     }
 
-    static String getSpriteName(Gas gas) {
-        var icon = gas.getIcon();
-        return icon == null ? TextureMap.LOCATION_MISSING_TEXTURE.toString() : icon.toString();
-    }
-
     @SuppressWarnings("SameParameterValue")
     private static void drawTexturedQuad(int x, int y, int width, int height, TextureAtlasSprite sprite,
                                          GasStack stack) {

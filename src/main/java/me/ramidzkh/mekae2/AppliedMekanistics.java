@@ -12,7 +12,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 @Mod(modid = Tags.MOD_ID, name = Tags.MOD_NAME, version = Tags.VERSION,
-    acceptedMinecraftVersions = "[1.12.2]", dependencies = "required-after:ae2;required-after:mekanism")
+    acceptedMinecraftVersions = "[1.12.2]",
+    dependencies = "required-after:ae2@[1.0.3,);" +
+        "required-after:mekanism;"
+)
 public final class AppliedMekanistics {
 
     public static final Logger LOGGER = LogManager.getLogger(Tags.MOD_NAME);

@@ -28,9 +28,7 @@ dependencies {
     }
 
     modRuntimeOnly "mezz:jei:4.31.2:dev"
-    compileOnly "io.github.formlessdragon:AppliedEnergistics2-Supergiant:${ae2_mod_version}:dev"
-    modRuntimeOnly("io.github.formlessdragon:AppliedEnergistics2-Supergiant:${ae2_mod_version}:dev") {
-        transitive = false
-    }
+    compileOnly("io.github.formlessdragon:AppliedEnergistics2-Supergiant:${ae2_mod_version}:dev")
+    modRuntimeOnly("io.github.formlessdragon:AppliedEnergistics2-Supergiant:${ae2_mod_version}:dev")
     modImplementation "curse.maven:mekanism-268560:2835175"
 }

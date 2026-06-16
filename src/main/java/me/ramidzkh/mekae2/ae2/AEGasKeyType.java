@@ -1,8 +1,6 @@
 package me.ramidzkh.mekae2.ae2;
 
 import java.util.Objects;
-import java.util.stream.Stream;
-
 import ae2.api.stacks.AEFluidKey;
 import ae2.api.stacks.AEKey;
 import ae2.api.stacks.AEKeyType;
@@ -48,10 +46,5 @@ public final class AEGasKeyType extends AEKeyType {
     @Override
     public String getUnitSymbol() {
         return "B";
-    }
-
-    @Override
-    public Stream<String> getTagNames() {
-        return Stream.empty();
     }
 }
