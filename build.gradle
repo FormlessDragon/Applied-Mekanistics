@@ -212,6 +212,10 @@ tasks.register('syncDevRuntimeResources', Copy) {
     }
 }
 
+tasks.withType(Javadoc).configureEach {
+    dependsOn tasks.named('syncDevRuntimeResources')
+}
+
 tasks.matching { it.name in ['runClient', 'runServer'] }.configureEach {
     dependsOn tasks.named('syncDevRuntimeResources')
 }
