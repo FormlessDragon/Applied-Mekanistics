@@ -324,11 +324,6 @@ sourceSets {
     main {
         java {
             srcDir generatedTagsSourceDir
-            exclude 'me/ramidzkh/mekae2/data/**'
-            exclude 'me/ramidzkh/mekae2/integration/emi/**'
-            exclude 'me/ramidzkh/mekae2/integration/jade/**'
-            exclude 'me/ramidzkh/mekae2/integration/jei/**'
-            exclude 'me/ramidzkh/mekae2/qio/**'
         }
     }
     test {
