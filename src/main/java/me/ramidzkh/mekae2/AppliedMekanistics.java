@@ -13,7 +13,7 @@ import org.apache.logging.log4j.Logger;
 
 @Mod(modid = Tags.MOD_ID, name = Tags.MOD_NAME, version = Tags.VERSION,
     acceptedMinecraftVersions = "[1.12.2]",
-    dependencies = "required-after:ae2@[1.0.3,);" +
+    dependencies = "required-after:ae2@[1.0.4,);" +
         "required-after:mekanism;"
 )
 public final class AppliedMekanistics {
@@ -29,14 +29,12 @@ public final class AppliedMekanistics {
 
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event) {
-        LOGGER.info("{} preInit", Tags.MOD_NAME);
         AMStorageIntegration.init();
         AMPartCapabilities.init();
     }
 
     @Mod.EventHandler
     public void init(FMLInitializationEvent event) {
-        LOGGER.info("{} init", Tags.MOD_NAME);
         AMStackWorldBehaviors.init();
         AMP2PAttunements.init();
     }

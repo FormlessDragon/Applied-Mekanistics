@@ -4,13 +4,13 @@ import java.util.Objects;
 import java.util.function.Function;
 
 import ae2.api.parts.PartModels;
-import ae2.api.parts.IPart;
 import ae2.api.parts.IPartItem;
 import ae2.core.definitions.ItemDefinition;
-import ae2.items.parts.PartItem;
+import ae2.items.parts.P2PPartItem;
 import ae2.items.parts.PartModelsHelper;
 import ae2.items.materials.MaterialItem;
 import ae2.items.storage.StorageTier;
+import ae2.parts.p2p.P2PTunnelPart;
 import me.ramidzkh.mekae2.AppliedMekanistics;
 import me.ramidzkh.mekae2.ae2.GasP2PTunnelPart;
 import me.ramidzkh.mekae2.Tags;
@@ -47,7 +47,7 @@ public final class AMItems {
         AppliedMekanistics.id("gas_storage_cell_256k"), new GasStorageCell(StorageTier.SIZE_256K),
         CREATIVE_TAB);
 
-    public static final ItemDefinition<PartItem<GasP2PTunnelPart>> GAS_P2P_TUNNEL = createPart(
+    public static final ItemDefinition<P2PPartItem<GasP2PTunnelPart>> GAS_P2P_TUNNEL = createP2PPart(
         AppliedMekanistics.id("gas_p2p_tunnel"), GasP2PTunnelPart.class, GasP2PTunnelPart::new);
 
     public static final ItemDefinition<GasPortableCellItem> PORTABLE_GAS_CELL_1K = new ItemDefinition<>(
@@ -120,10 +120,10 @@ public final class AMItems {
     }
 
     @SuppressWarnings("SameParameterValue")
-    private static <T extends IPart> ItemDefinition<PartItem<T>> createPart(
+    private static <T extends P2PTunnelPart<T>> ItemDefinition<P2PPartItem<T>> createP2PPart(
         ResourceLocation id, Class<T> partClass, Function<IPartItem<T>, T> factory) {
         PartModels.registerModels(PartModelsHelper.createModels(partClass));
-        PartItem<T> item = new PartItem<>(partClass, factory);
+        P2PPartItem<T> item = new P2PPartItem<>(partClass, factory);
         item.setCreativeTab(CREATIVE_TAB);
         return new ItemDefinition<>(id, item, CREATIVE_TAB);
     }

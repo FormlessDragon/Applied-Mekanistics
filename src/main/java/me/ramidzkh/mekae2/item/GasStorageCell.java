@@ -10,7 +10,7 @@ import net.minecraft.item.ItemStack;
 public class GasStorageCell extends BasicStorageCell {
 
     public GasStorageCell(StorageTier tier) {
-        super(tier.idleDrain(), tier.bytes() / 1024, tier.bytes() / 128, 5, AEGasKeyType.TYPE);
+        super(tier, 5, AEGasKeyType.TYPE);
     }
 
     @Override
