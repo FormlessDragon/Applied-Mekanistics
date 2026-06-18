@@ -28,11 +28,11 @@ The upstream repository remains the original Appmek project and the primary refe
 
 ```groovy
 repositories {
-    mavenCentral()
+    maven { url 'https://jitpack.io' }
 }
 
 dependencies {
-    implementation "io.github.formlessdragon:mekeng:${mod_version}:dev"
+    implementation "com.github.FormlessDragon:Applied-Mekanistics:${mod_version}:dev"
 }
 ```
 
