@@ -60,6 +60,11 @@ public final class MekanismStackImportStrategy implements StackImportStrategy {
                 continue;
             }
 
+            if (extractedStack.getGas() != resource.getGas()) {
+                handler.receiveGas(fromSide, extractedStack, true);
+                continue;
+            }
+
             long inserted = inv.getInventory().insert(resource, extractedStack.amount, Actionable.MODULATE,
                     context.getActionSource());
 

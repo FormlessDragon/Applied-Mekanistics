@@ -1,7 +1,5 @@
 text.mekeng.gas=Gazlar
-text.mekeng.creative_tab=Applied Mekanistics
 itemGroup.mekeng=Applied Mekanistics
-text.mekeng.qio_frequency=QIO Frekansı (%s)
 item.mekeng.gas_cell_housing.name=ME Gaz Hücre Gövdesi
 item.mekeng.gas_storage_cell_1k.name=1k ME Gaz Depolama Hücresi
 item.mekeng.gas_storage_cell_4k.name=4k ME Gaz Depolama Hücresi

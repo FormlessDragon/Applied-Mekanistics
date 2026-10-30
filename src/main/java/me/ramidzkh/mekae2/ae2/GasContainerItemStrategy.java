@@ -14,7 +14,6 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.inventory.Container;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.EnumFacing;
 import org.jetbrains.annotations.Nullable;
 
 @SuppressWarnings("UnstableApiUsage")
@@ -157,6 +156,7 @@ public class GasContainerItemStrategy
 
         int insert(GasStack stack, boolean execute);
 
+        @SuppressWarnings("BooleanMethodIsAlwaysInverted")
         boolean canExtract(AEGasKey what);
 
         @Nullable
@@ -177,12 +177,12 @@ public class GasContainerItemStrategy
                     return gas;
                 }
             }
-            return this.handler.drawGas(EnumFacing.UP, Integer.MAX_VALUE, false);
+            return this.handler.drawGas(null, Integer.MAX_VALUE, false);
         }
 
         @Override
         public boolean canInsert(AEGasKey what) {
-            return this.handler.canReceiveGas(EnumFacing.UP, what.getGas());
+            return this.handler.canReceiveGas(null, what.getGas());
         }
 
         @Override
@@ -195,7 +195,7 @@ public class GasContainerItemStrategy
             int inserted = 0;
             while (inserted < insertable) {
                 int before = getStoredAmount(stack.getGas());
-                int step = this.handler.receiveGas(EnumFacing.UP, stack.copy().withAmount(insertable - inserted), true);
+                int step = this.handler.receiveGas(null, stack.copy().withAmount(insertable - inserted), true);
                 if (step <= 0) {
                     break;
                 }
@@ -211,7 +211,7 @@ public class GasContainerItemStrategy
 
         @Override
         public boolean canExtract(AEGasKey what) {
-            return this.handler.canDrawGas(EnumFacing.UP, what.getGas());
+            return this.handler.canDrawGas(null, what.getGas());
         }
 
         @Override
@@ -228,8 +228,13 @@ public class GasContainerItemStrategy
             int extractedAmount = 0;
             while (extractedAmount < extractable) {
                 int before = getStoredAmount(what.getGas());
-                GasStack extracted = this.handler.drawGas(EnumFacing.UP, extractable - extractedAmount, true);
-                if (extracted == null || extracted.getGas() != what.getGas() || extracted.amount <= 0) {
+                GasStack extracted = this.handler.drawGas(null, extractable - extractedAmount, true);
+                if (extracted == null || extracted.amount <= 0) {
+                    break;
+                }
+
+                if (extracted.getGas() != what.getGas()) {
+                    this.handler.receiveGas(null, extracted, true);
                     break;
                 }
 
@@ -270,7 +275,7 @@ public class GasContainerItemStrategy
             }
 
             if (!foundCompatibleTank) {
-                return this.handler.receiveGas(EnumFacing.UP, stack, false);
+                return this.handler.receiveGas(null, stack, false);
             }
             return Math.clamp(capacity - storedAmount, 0, stack.amount);
         }
@@ -297,7 +302,7 @@ public class GasContainerItemStrategy
             }
 
             if (!foundCompatibleTank) {
-                GasStack extracted = this.handler.drawGas(EnumFacing.UP, amount, false);
+                GasStack extracted = this.handler.drawGas(null, amount, false);
                 return extracted != null && extracted.getGas() == what.getGas() ? extracted.amount : 0;
             }
             return Math.clamp(storedAmount, 0, amount);
@@ -393,7 +398,12 @@ public class GasContainerItemStrategy
             while (extractedAmount < extractable) {
                 int before = getStoredAmount(target, what.getGas());
                 GasStack extracted = this.item.removeGas(target, extractable - extractedAmount);
-                if (extracted == null || extracted.getGas() != what.getGas() || extracted.amount <= 0) {
+                if (extracted == null || extracted.amount <= 0) {
+                    break;
+                }
+
+                if (extracted.getGas() != what.getGas()) {
+                    this.item.addGas(target, extracted);
                     break;
                 }
 
@@ -474,6 +484,10 @@ public class GasContainerItemStrategy
 
         @Override
         public void addOverflow(@Nullable ItemStack stack) {
+            if (stack == null) {
+                return;
+            }
+
             if (this.player.inventory.getItemStack().isEmpty()) {
                 this.player.inventory.setItemStack(stack);
             } else {
@@ -496,6 +510,10 @@ public class GasContainerItemStrategy
 
         @Override
         public void addOverflow(@Nullable ItemStack stack) {
+            if (stack == null) {
+                return;
+            }
+
             this.player.inventory.addItemStackToInventory(stack);
         }
     }

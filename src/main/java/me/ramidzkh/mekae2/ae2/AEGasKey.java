@@ -17,12 +17,14 @@ import org.jetbrains.annotations.Nullable;
 public final class AEGasKey extends AEKey {
 
     private final GasStack stack;
+    private final ResourceLocation id;
     private final int hashCode;
 
     private AEGasKey(GasStack stack) {
         Preconditions.checkArgument(stack != null && stack.getGas() != null && stack.amount > 0, "stack was empty");
         this.stack = stack.copy();
         this.stack.amount = 1;
+        this.id = new ResourceLocation("mekanism", this.stack.getGas().getName());
         this.hashCode = hashStack(this.stack);
     }
 
@@ -73,7 +75,7 @@ public final class AEGasKey extends AEKey {
 
     @Override
     public AEKey dropSecondary() {
-        return of(getGas());
+        return this;
     }
 
     @Override
@@ -93,7 +95,7 @@ public final class AEGasKey extends AEKey {
 
     @Override
     public ResourceLocation getId() {
-        return new ResourceLocation("mekanism", getGas().getName());
+        return this.id;
     }
 
     @Override

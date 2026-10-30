@@ -5,6 +5,7 @@ import ae2.api.parts.RegisterPartCapabilitiesEvent;
 import ae2.api.parts.RegisterPartCapabilitiesEventInternal;
 import ae2.parts.crafting.PatternProviderPart;
 import ae2.parts.misc.InterfacePart;
+import ae2.parts.p2p.PatternProviderP2PTunnelPart;
 import ae2.tile.networking.TileCableBus;
 import me.ramidzkh.mekae2.AppliedMekanistics;
 import me.ramidzkh.mekae2.Tags;
@@ -29,7 +30,8 @@ public final class AMPartCapabilities {
 
         Capability<IGasHandler> gasCapability = Capabilities.GAS_HANDLER_CAPABILITY;
         if (gasCapability == null) {
-            AppliedMekanistics.LOGGER.warn("Mekanism gas capability is not available during AppMek part capability registration");
+            AppliedMekanistics.LOGGER
+                .warn("Mekanism gas capability is not available during AppMek part capability registration");
             return;
         }
 
@@ -41,6 +43,10 @@ public final class AMPartCapabilities {
 
     @SubscribeEvent
     public static void registerPartCapabilities(RegisterPartCapabilitiesEvent event) {
+        if (registered) {
+            return;
+        }
+
         Capability<IGasHandler> gasCapability = Capabilities.GAS_HANDLER_CAPABILITY;
         if (gasCapability == null) {
             return;
@@ -54,10 +60,18 @@ public final class AMPartCapabilities {
         event.addHostType(TileCableBus.class);
         event.register(gasCapability, (part, _) -> part.getExposedApi(), GasP2PTunnelPart.class);
         event.register(gasCapability,
-            (part, _) -> GenericInternalInventoryAdapters.getCapability(part.getLogic().getReturnInv(), gasCapability),
+            (part, _) -> GenericInternalInventoryAdapters.getCapability(part.getLogic().getReturnInv(),
+                gasCapability),
             PatternProviderPart.class);
         event.register(gasCapability,
-            (part, _) -> GenericInternalInventoryAdapters.getCapability(part.getInterfaceLogic().getStorage(), gasCapability),
+            (part, _) -> GenericInternalInventoryAdapters.getCapability(part.getInterfaceLogic().getStorage(),
+                gasCapability),
             InterfacePart.class);
+        event.register(gasCapability, (part, _) -> {
+            var returnInventory = part.getReturnInventoryApi();
+            return returnInventory == null
+                    ? null
+                    : GenericInternalInventoryAdapters.getCapability(returnInventory, gasCapability);
+        }, PatternProviderP2PTunnelPart.class);
     }
 }

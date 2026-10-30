@@ -7,17 +7,14 @@ import ae2.api.stacks.AEKey;
 import ae2.api.storage.StorageHelper;
 import mekanism.api.gas.IGasHandler;
 import mekanism.common.capabilities.Capabilities;
+import me.ramidzkh.mekae2.AppliedMekanistics;
 import me.ramidzkh.mekae2.ae2.AEGasKey;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.WorldServer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public final class MekanismStackExportStrategy implements StackExportStrategy {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(MekanismStackExportStrategy.class);
 
     private final WorldServer level;
     private final BlockPos fromPos;
@@ -55,8 +52,7 @@ public final class MekanismStackExportStrategy implements StackExportStrategy {
                 leftover -= inv.getInventory().insert(what, leftover, Actionable.MODULATE, context.getActionSource());
 
                 if (leftover > 0) {
-                    LOGGER.error("Storage export: adjacent gas handler unexpectedly refused insert, voided {}x{}",
-                            leftover, what);
+                    AppliedMekanistics.LOGGER.error("Storage export: adjacent gas handler unexpectedly refused insert, voided {} x {}", leftover, what);
                 }
             }
         }
