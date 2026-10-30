@@ -1,5 +1,7 @@
 package me.ramidzkh.mekae2.ae2;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import ae2.api.parts.IPartItem;
@@ -23,6 +25,23 @@ public class GasP2PTunnelPart extends CapabilityP2PTunnelPart<GasP2PTunnelPart, 
         AppliedMekanistics.id("part/p2p/p2p_tunnel_gas"),
         AppliedMekanistics.id("part/p2p_tunnel_gas"));
     private static final IGasHandler NULL_GAS_HANDLER = new NullGasHandler();
+    private static final GasTankInfo[] INPUT_TANKS = { new GasTankInfo() {
+        @Override
+        @Nullable
+        public GasStack getGas() {
+            return null;
+        }
+
+        @Override
+        public int getStored() {
+            return 0;
+        }
+
+        @Override
+        public int getMaxGas() {
+            return Integer.MAX_VALUE;
+        }
+    } };
 
     @PartModels
     public static List<IPartModel> getModels() {
@@ -72,7 +91,7 @@ public class GasP2PTunnelPart extends CapabilityP2PTunnelPart<GasP2PTunnelPart, 
                 }
             }
 
-            if (doTransfer) {
+            if (doTransfer && total > 0) {
                 deductTransportCost(total, AEGasKeyType.TYPE);
             }
 
@@ -98,7 +117,7 @@ public class GasP2PTunnelPart extends CapabilityP2PTunnelPart<GasP2PTunnelPart, 
         @Override
         @Nonnull
         public GasTankInfo[] getTankInfo() {
-            return IGasHandler.NONE;
+            return INPUT_TANKS;
         }
     }
 
@@ -122,15 +141,22 @@ public class GasP2PTunnelPart extends CapabilityP2PTunnelPart<GasP2PTunnelPart, 
         @Override
         @Nullable
         public GasStack drawGas(EnumFacing side, int amount, boolean doTransfer) {
-            try (var input = getInputCapability()) {
-                var result = input.get().drawGas(side, amount, doTransfer);
+            for (var input : getInputs()) {
+                try (var inputCapability = input.getAdjacentCapability()) {
+                    var result = inputCapability.get().drawGas(side, amount, doTransfer);
+                    if (result == null) {
+                        continue;
+                    }
 
-                if (doTransfer && result != null) {
-                    deductTransportCost(result.amount, AEGasKeyType.TYPE);
+                    if (doTransfer) {
+                        deductTransportCost(result.amount, AEGasKeyType.TYPE);
+                    }
+
+                    return result;
                 }
-
-                return result;
             }
+
+            return null;
         }
 
         @Override
@@ -140,17 +166,28 @@ public class GasP2PTunnelPart extends CapabilityP2PTunnelPart<GasP2PTunnelPart, 
 
         @Override
         public boolean canDrawGas(EnumFacing side, Gas gas) {
-            try (var input = getInputCapability()) {
-                return input.get().canDrawGas(side, gas);
+            for (var input : getInputs()) {
+                try (var inputCapability = input.getAdjacentCapability()) {
+                    if (inputCapability.get().canDrawGas(side, gas)) {
+                        return true;
+                    }
+                }
             }
+
+            return false;
         }
 
         @Override
         @Nonnull
         public GasTankInfo[] getTankInfo() {
-            try (var input = getInputCapability()) {
-                return input.get().getTankInfo();
+            var tanks = new ArrayList<GasTankInfo>();
+            for (var input : getInputs()) {
+                try (var inputCapability = input.getAdjacentCapability()) {
+                    Collections.addAll(tanks, inputCapability.get().getTankInfo());
+                }
             }
+
+            return tanks.toArray(new GasTankInfo[0]);
         }
     }
 

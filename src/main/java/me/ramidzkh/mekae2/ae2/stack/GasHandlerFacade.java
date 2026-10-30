@@ -17,8 +17,6 @@ import net.minecraft.util.text.TextComponentTranslation;
 public record GasHandlerFacade(IGasHandler handler, EnumFacing side, boolean extractableOnly,
         Runnable changeListener) implements MEStorage {
 
-    private static final long MAX_REPORTED_AMOUNT = 1L << 42;
-
     @Override
     public long insert(AEKey what, long amount, Actionable mode, IActionSource source) {
         if (!(what instanceof AEGasKey key) || amount <= 0) {
@@ -41,7 +39,14 @@ public record GasHandlerFacade(IGasHandler handler, EnumFacing side, boolean ext
         }
 
         GasStack extracted = handler.drawGas(side, clampToInt(amount), mode == Actionable.MODULATE);
-        if (extracted == null || !extracted.isGasEqual(key.toStack(1))) {
+        if (extracted == null) {
+            return 0;
+        }
+
+        if (!extracted.isGasEqual(key.toStack(1))) {
+            if (mode == Actionable.MODULATE) {
+                handler.receiveGas(side, extracted, true);
+            }
             return 0;
         }
 
@@ -74,7 +79,7 @@ public record GasHandlerFacade(IGasHandler handler, EnumFacing side, boolean ext
                 continue;
             }
 
-            out.add(key, Math.min(stack.amount, MAX_REPORTED_AMOUNT));
+            out.add(key, stack.amount);
         }
     }
 

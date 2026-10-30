@@ -1,7 +1,5 @@
 text.mekeng.gas=气体
-text.mekeng.creative_tab=应用机械
 itemGroup.mekeng=应用机械
-text.mekeng.qio_frequency=QIO 频率 (%s)
 item.mekeng.gas_cell_housing.name=ME 气体元件外壳
 item.mekeng.gas_storage_cell_1k.name=1k ME 气体存储元件
 item.mekeng.gas_storage_cell_4k.name=4k ME 气体存储元件

@@ -8,6 +8,7 @@ import me.ramidzkh.mekae2.util.AMText;
 import me.ramidzkh.mekae2.AppliedMekanistics;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.PacketBuffer;
+import org.jetbrains.annotations.Nullable;
 
 public final class AEGasKeyType extends AEKeyType {
 
@@ -28,6 +29,7 @@ public final class AEGasKeyType extends AEKeyType {
     }
 
     @Override
+    @Nullable
     public AEGasKey readFromPacket(PacketBuffer input) {
         Objects.requireNonNull(input);
         return AEGasKey.fromPacket(input);

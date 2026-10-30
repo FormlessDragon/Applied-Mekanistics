@@ -1,7 +1,5 @@
 text.mekeng.gas=ガス
-text.mekeng.creative_tab=Applied Mekanistics
 itemGroup.mekeng=Applied Mekanistics
-text.mekeng.qio_frequency=QIO周波数(%s)
 item.mekeng.gas_cell_housing.name=MEガスセル筐体
 item.mekeng.gas_storage_cell_1k.name=1k MEガスストレージセル
 item.mekeng.gas_storage_cell_4k.name=4k MEガスストレージセル

@@ -5,6 +5,7 @@ import java.util.function.Function;
 
 import ae2.api.parts.PartModels;
 import ae2.api.parts.IPartItem;
+import ae2.core.AEConfig;
 import ae2.core.definitions.ItemDefinition;
 import ae2.items.parts.P2PPartItem;
 import ae2.items.parts.PartModelsHelper;
@@ -21,12 +22,14 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import org.jetbrains.annotations.NotNull;
 
 @Mod.EventBusSubscriber(modid = Tags.MOD_ID)
 public final class AMItems {
 
     public static final CreativeTabs CREATIVE_TAB = new CreativeTabs(Tags.MOD_ID) {
         @Override
+        @NotNull
         public ItemStack createIcon() {
             return GAS_CELL_64K.stack();
         }
@@ -52,19 +55,19 @@ public final class AMItems {
 
     public static final ItemDefinition<GasPortableCellItem> PORTABLE_GAS_CELL_1K = new ItemDefinition<>(
         AppliedMekanistics.id("portable_gas_cell_1k"),
-        new GasPortableCellItem(18, StorageTier.SIZE_1K, 20000, 0x80caff), CREATIVE_TAB);
+        new GasPortableCellItem(18, StorageTier.SIZE_1K, portableCellBattery(), 0x80caff), CREATIVE_TAB);
     public static final ItemDefinition<GasPortableCellItem> PORTABLE_GAS_CELL_4K = new ItemDefinition<>(
         AppliedMekanistics.id("portable_gas_cell_4k"),
-        new GasPortableCellItem(18, StorageTier.SIZE_4K, 20000, 0x80caff), CREATIVE_TAB);
+        new GasPortableCellItem(18, StorageTier.SIZE_4K, portableCellBattery(), 0x80caff), CREATIVE_TAB);
     public static final ItemDefinition<GasPortableCellItem> PORTABLE_GAS_CELL_16K = new ItemDefinition<>(
         AppliedMekanistics.id("portable_gas_cell_16k"),
-        new GasPortableCellItem(18, StorageTier.SIZE_16K, 20000, 0x80caff), CREATIVE_TAB);
+        new GasPortableCellItem(18, StorageTier.SIZE_16K, portableCellBattery(), 0x80caff), CREATIVE_TAB);
     public static final ItemDefinition<GasPortableCellItem> PORTABLE_GAS_CELL_64K = new ItemDefinition<>(
         AppliedMekanistics.id("portable_gas_cell_64k"),
-        new GasPortableCellItem(18, StorageTier.SIZE_64K, 20000, 0x80caff), CREATIVE_TAB);
+        new GasPortableCellItem(18, StorageTier.SIZE_64K, portableCellBattery(), 0x80caff), CREATIVE_TAB);
     public static final ItemDefinition<GasPortableCellItem> PORTABLE_GAS_CELL_256K = new ItemDefinition<>(
         AppliedMekanistics.id("portable_gas_cell_256k"),
-        new GasPortableCellItem(18, StorageTier.SIZE_256K, 20000, 0x80caff), CREATIVE_TAB);
+        new GasPortableCellItem(18, StorageTier.SIZE_256K, portableCellBattery(), 0x80caff), CREATIVE_TAB);
 
     private static final ItemDefinition<?>[] ITEMS = {
         GAS_CELL_HOUSING,
@@ -82,6 +85,14 @@ public final class AMItems {
     };
 
     private AMItems() {
+    }
+
+    private static double portableCellBattery() {
+        try {
+            return AEConfig.instance().getPortableCellBattery();
+        } catch (IllegalStateException ignored) {
+            return 20000;
+        }
     }
 
     @SubscribeEvent
@@ -124,7 +135,6 @@ public final class AMItems {
         ResourceLocation id, Class<T> partClass, Function<IPartItem<T>, T> factory) {
         PartModels.registerModels(PartModelsHelper.createModels(partClass));
         P2PPartItem<T> item = new P2PPartItem<>(partClass, factory);
-        item.setCreativeTab(CREATIVE_TAB);
         return new ItemDefinition<>(id, item, CREATIVE_TAB);
     }
 }

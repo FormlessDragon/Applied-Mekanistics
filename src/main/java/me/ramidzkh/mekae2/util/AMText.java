@@ -5,8 +5,7 @@ import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentTranslation;
 
 public enum AMText {
-    GASES("gas"),
-    CREATIVE_TAB("creative_tab");
+    GASES("gas");
 
     public final String key;
 
