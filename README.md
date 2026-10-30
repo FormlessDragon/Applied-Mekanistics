@@ -32,7 +32,7 @@ repositories {
 }
 
 dependencies {
-    var mod_version = "v1.1.0"
+    var mod_version = "v1.2.0"
     implementation "com.github.FormlessDragon:Applied-Mekanistics:${mod_version}:dev"
 }
 ```
