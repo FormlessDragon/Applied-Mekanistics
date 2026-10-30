@@ -193,7 +193,7 @@ apply from: 'gradle/scripts/dependencies.gradle'
 
 def generatedTagsSourceDir = layout.buildDirectory.dir('generated/sources/tags/java')
 def generateTagsSource = tasks.register('generateTagsSource') {
-    def tagsPackage = "${propertyString('root_package')}.${propertyString('mod_id')}"
+    def tagsPackage = "${propertyString('root_package')}.mekae2"
     def outputFile = generatedTagsSourceDir.map {
         it.file("${tagsPackage.replace('.', '/')}/Tags.java")
     }
